@@ -67,7 +67,7 @@ The calculator uses two APIs for exchange rates (simulated in this demo):
 
 ## License
 
-MIT
+Apache-2.0
 
 ## Contact
 For questions or issues regarding this demo code:
