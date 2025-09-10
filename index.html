@@ -1,0 +1,2095 @@
+<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Position Size Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* Styles remain unchanged */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .calculator-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 1rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .result-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-left: 5px solid #007bff;
+        }
+        .result-title {
+            color: #007bff;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        .disclaimer {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        .rate-display {
+            background-color: #e9f7fe;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .rate-display .rate {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0056b3;
+        }
+        .rate-display .timestamp {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(0, 123, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        .info-icon {
+            color: #6c757d;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+        .lot-selector {
+            display: flex;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+        }
+        .lot-option {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .lot-option.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .profit-indicator {
+            font-weight: 600;
+        }
+        .profit-indicator.positive {
+            color: #28a745;
+        }
+        .profit-indicator.negative {
+            color: #dc3545;
+        }
+        .form-section {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            background-color: #fafafa;
+        }
+        .form-section-title {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .risk-reward-toggle {
+            margin-bottom: 1rem;
+        }
+        .risk-reward-toggle .form-check {
+            margin-right: 1.5rem;
+            display: inline-block;
+        }
+        .nav-tabs {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-tabs .nav-link.active {
+            color: #007bff;
+            background-color: transparent;
+            border-bottom: 2px solid #007bff;
+            font-weight: 600;
+        }
+        .tab-content {
+            padding: 1rem 0;
+        }
+        .api-credits {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .api-selector {
+            margin-bottom: 1rem;
+        }
+        .api-option {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+            margin-right: 0.5rem;
+            display: inline-block;
+        }
+        .api-option.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .debug-info {
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border: 1px dashed #ddd;
+            background-color: #f9f9f9;
+        }
+        .refresh-rate-btn {
+            border: none;
+            background: none;
+            color: #007bff;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .refresh-rate-btn:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        .refresh-rate-btn:active {
+            background-color: rgba(0, 123, 255, 0.2);
+        }
+        .refresh-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 0.5rem;
+        }
+        .atr-display {
+            background-color: #f3f9ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 3px solid #17a2b8;
+        }
+        .atr-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #17a2b8;
+        }
+        .atr-multiplier {
+            width: 70px;
+        }
+        .sl-based-on-atr {
+            font-weight: 600;
+            color: #17a2b8;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        .atr-badge {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            border: 1px solid #0d6efd;
+        }
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+            background-color: #2c3e50;
+            color: #f1f1f1;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+        .log-entry {
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #444;
+            padding-bottom: 0.5rem;
+        }
+        .log-entry.api {
+            color: #7fdbff;
+        }
+        .log-entry.calculation {
+            color: #2ecc71;
+        }
+        .log-entry.error {
+            color: #ff6b6b;
+        }
+        .log-timestamp {
+            color: #aaa;
+            margin-right: 0.5rem;
+        }
+        .toggle-logs-btn {
+            background-color: #343a40;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+        .global-timeframe-section {
+            background-color: #ebf7ed;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 3px solid #28a745;
+        }
+        .timeframe-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .timeframe-option {
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            text-align: center;
+            flex: 1;
+            min-width: 60px;
+        }
+        .timeframe-option:hover {
+            background-color: #f0f0f0;
+        }
+        .timeframe-option.active {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+            font-weight: 600;
+        }
+        .timeframe-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            background-color: #e8f5e9;
+            color: #28a745;
+            border: 1px solid #28a745;
+            margin-left: 0.5rem;
+        }
+        .scaling-info {
+            font-size: 0.85rem;
+            color: #555;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 576px) {
+            .calculator-container {
+                padding: 1rem;
+                margin: 1rem;
+            }
+            .result-value {
+                font-size: 1.5rem;
+            }
+            .timeframe-option {
+                padding: 0.35rem 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body>
+    <div class="calculator-container">
+        <div class="header">
+            <h1>Forex Position Size Calculator</h1>
+            <p class="lead">Calculate the optimal position size based on your risk management settings</p>
+        </div>
+
+        <form id="position-size-form">
+            <div class="global-timeframe-section">
+                <div class="form-section-title">Global Timeframe <span class="timeframe-badge">Strategy Setting</span></div>
+                <p class="mb-2">Select the timeframe for your trading strategy. This will affect ATR calculations and other timeframe-dependent settings.</p>
+                <div class="timeframe-selector">
+                    <div class="timeframe-option" data-timeframe="1m">1 min</div>
+                    <div class="timeframe-option" data-timeframe="5m">5 min</div>
+                    <div class="timeframe-option" data-timeframe="15m">15 min</div>
+                    <div class="timeframe-option" data-timeframe="30m">30 min</div>
+                    <div class="timeframe-option" data-timeframe="1h">1 hour</div>
+                    <div class="timeframe-option active" data-timeframe="4h">4 hour</div>
+                    <div class="timeframe-option" data-timeframe="8h">8 hour</div>
+                    <div class="timeframe-option" data-timeframe="1d">Daily</div>
+                </div>
+                <p class="scaling-info">Note: ATR values automatically scale with timeframe. Higher timeframes generally have larger ATR values.</p>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">Pair &amp; Account Settings</div>
+                
+                <div class="api-selector">
+                    <label class="form-label">Rates Data Source:</label>
+                    <div>
+                        <span class="api-option active" data-api="currencyfreaks">CurrencyFreaks API</span>
+                        <span class="api-option" data-api="fxrates">FX Rates API</span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label for="currency-pair" class="form-label">Currency Pair:</label>
+                        <select class="form-select" id="currency-pair" required="">
+                            <option value="">Select Currency Pair</option>
+                            <option value="EURUSD">EUR/USD</option>
+                            <option value="GBPUSD">GBP/USD</option>
+                            <option value="USDJPY">USD/JPY</option>
+                            <option value="AUDUSD">AUD/USD</option>
+                            <option value="USDCAD">USD/CAD</option>
+                            <option value="USDCHF">USD/CHF</option>
+                            <option value="NZDUSD">NZD/USD</option>
+                            <option value="EURJPY">EUR/JPY</option>
+                            <option value="GBPJPY">GBP/JPY</option>
+                            <option value="EURGBP">EUR/GBP</option>
+                            <option value="AUDJPY">AUD/JPY</option>
+                            <option value="EURAUD">EUR/AUD</option>
+                            <option value="GBPAUD">GBP/AUD</option>
+                            <option value="XAUUSD">XAU/USD (Gold)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="account-currency" class="form-label">Account Currency:</label>
+                        <select class="form-select" id="account-currency" required="">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="CHF">CHF</option>
+                            <option value="NZD">NZD</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="rate-display" class="rate-display" style="display: none;">
+                    <div class="refresh-container">
+                        <button type="button" class="refresh-rate-btn" id="refresh-rate-btn" title="Refresh Rate">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Rate
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p>Current Rate:</p>
+                            <div class="rate" id="current-rate">Loading...</div>
+                        </div>
+                        <div class="col-md-6">
+                            <p>Last Updated:</p>
+                            <div class="timestamp" id="timestamp">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="api-credits" id="api-source">Exchange rates provided by CurrencyFreaks API</div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label for="account-size" class="form-label">Account Size:</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="account-size" min="1" step="1" value="10000" required="">
+                            <span class="input-group-text account-currency-symbol">USD</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="risk-percentage" class="form-label">Risk Percentage:</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="risk-percentage" min="0.1" max="100" step="0.1" value="2" required="">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">ATR (Average True Range) <span class="atr-badge">Volatility Indicator</span></div>
+                
+                <div class="atr-display" id="atr-display">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="atr-periods" class="form-label">ATR Periods:</label>
+                            <select class="form-select" id="atr-periods">
+                                <option value="14">14 periods (standard)</option>
+                                <option value="20">20 periods</option>
+                                <option value="10">10 periods</option>
+                                <option value="5">5 periods</option>
+                            </select>
+                            <div class="mt-2">
+                                <span class="fw-bold">Using: </span>
+                                <span id="atr-timeframe-display">4 hour timeframe</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Enter ATR Value:</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="atr-value" step="0.00001" placeholder="e.g., 0.00120">
+                                <button class="btn btn-outline-secondary" type="button" id="fetch-atr-btn">
+                                    <i class="bi bi-download"></i> Get ATR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="input-group align-items-center">
+                                <label class="form-label me-2 mb-0">ATR Multiplier:</label>
+                                <input type="number" class="form-control atr-multiplier" id="atr-multiplier" value="2" step="0.1" min="0.1">
+                                <button class="btn btn-outline-info btn-sm ms-2" type="button" id="apply-atr-btn">
+                                    Apply to SL
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="sl-based-on-atr" id="sl-atr-info">
+                                Stop Loss based on ATR: <span id="sl-atr-pips">- pips</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section-title">Trade Details</div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label for="trade-direction" class="form-label">Trade Direction:</label>
+                        <select class="form-select" id="trade-direction" required="">
+                            <option value="buy">Buy (Long)</option>
+                            <option value="sell">Sell (Short)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="entry-price" class="form-label">Entry Price:</label>
+                        <input type="number" class="form-control" id="entry-price" step="0.00001" placeholder="Current market price">
+                        <small class="text-muted">Leave blank to use current market price</small>
+                    </div>
+                </div>
+
+                <!-- Stop Loss Tab Navigation -->
+                <ul class="nav nav-tabs" id="stop-loss-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="sl-pips-tab" data-bs-toggle="tab" data-bs-target="#sl-pips" type="button" role="tab" aria-controls="sl-pips" aria-selected="true">Fixed Pips</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="sl-price-tab" data-bs-toggle="tab" data-bs-target="#sl-price" type="button" role="tab" aria-controls="sl-price" aria-selected="false">Price Level</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="sl-atr-tab" data-bs-toggle="tab" data-bs-target="#sl-atr" type="button" role="tab" aria-controls="sl-atr" aria-selected="false">ATR-Based</button>
+                    </li>
+                </ul>
+
+                <!-- Stop Loss Tab Content -->
+                <div class="tab-content" id="stop-loss-tab-content">
+                    <!-- Fixed Pips Tab -->
+                    <div class="tab-pane fade show active" id="sl-pips" role="tabpanel" aria-labelledby="sl-pips-tab">
+                        <div class="row mb-3 mt-3">
+                            <div class="col-md-12">
+                                <label for="stop-loss-pips" class="form-label">Stop Loss (in pips):</label>
+                                <input type="number" class="form-control" id="stop-loss-pips" min="1" step="1" value="50">
+                                <small class="text-muted">Distance from entry in pips</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Price Level Tab -->
+                    <div class="tab-pane fade" id="sl-price" role="tabpanel" aria-labelledby="sl-price-tab">
+                        <div class="row mb-3 mt-3">
+                            <div class="col-md-12">
+                                <label for="stop-loss-price" class="form-label">Stop Loss Price:</label>
+                                <input type="number" class="form-control" id="stop-loss-price" step="0.00001" placeholder="Stop loss price">
+                                <small class="text-muted">Exact price level for stop loss</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ATR-Based Tab -->
+                    <div class="tab-pane fade" id="sl-atr" role="tabpanel" aria-labelledby="sl-atr-tab">
+                        <div class="row mb-3 mt-3">
+                            <div class="col-md-12">
+                                <p>Using ATR-based stop loss: <span id="atr-sl-value" class="fw-bold">0</span> pips</p>
+                                <p class="text-muted small">Stop loss is calculated as: Current ATR × ATR Multiplier</p>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="update-atr-sl-btn">
+                                    Recalculate ATR Stop Loss
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Take Profit Tab Navigation -->
+                <ul class="nav nav-tabs mt-4" id="take-profit-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tp-price-tab" data-bs-toggle="tab" data-bs-target="#tp-price" type="button" role="tab" aria-controls="tp-price" aria-selected="true">TP by Price/Pips</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tp-ratio-tab" data-bs-toggle="tab" data-bs-target="#tp-ratio" type="button" role="tab" aria-controls="tp-ratio" aria-selected="false">TP by Risk-Reward</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tp-atr-tab" data-bs-toggle="tab" data-bs-target="#tp-atr" type="button" role="tab" aria-controls="tp-atr" aria-selected="false">ATR-Based</button>
+                    </li>
+                </ul>
+
+                <!-- Take Profit Tab Content -->
+                <div class="tab-content" id="take-profit-tab-content">
+                    <!-- Price/Pips Tab -->
+                    <div class="tab-pane fade show active" id="tp-price" role="tabpanel" aria-labelledby="tp-price-tab">
+                        <div class="row mb-3 mt-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="take-profit-price" class="form-label">Take Profit Price:</label>
+                                <input type="number" class="form-control" id="take-profit-price" step="0.00001" placeholder="Take profit price">
+                                <small class="text-muted">Or use pips below</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="take-profit-pips" class="form-label">Take Profit (in pips):</label>
+                                <input type="number" class="form-control" id="take-profit-pips" min="1" step="1" placeholder="e.g., 100">
+                                <small class="text-muted">Distance from entry (whole number)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Risk-Reward Tab -->
+                    <div class="tab-pane fade" id="tp-ratio" role="tabpanel" aria-labelledby="tp-ratio-tab">
+                        <div class="row mb-3 mt-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="risk-reward-ratio" class="form-label">Risk-to-Reward Ratio:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">1:</span>
+                                    <input type="number" class="form-control" id="risk-reward-ratio-input" min="0.1" step="0.1" value="2">
+                                </div>
+                                <small class="text-muted">Enter reward value (e.g., 2 for 1:2)</small>
+                            </div>
+                            <div class="col-md-6 mb-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-secondary" id="calculate-tp-btn">Calculate Take Profit</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ATR-Based Tab -->
+                    <div class="tab-pane fade" id="tp-atr" role="tabpanel" aria-labelledby="tp-atr-tab">
+                        <div class="row mb-3 mt-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="tp-atr-multiplier" class="form-label">TP ATR Multiplier:</label>
+                                <input type="number" class="form-control" id="tp-atr-multiplier" min="0.1" step="0.1" value="3">
+                                <small class="text-muted">Typically 1.5-3× the ATR multiplier for stop loss</small>
+                            </div>
+                            <div class="col-md-6 mb-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-secondary" id="calculate-tp-atr-btn">Apply ATR Take Profit</button>
+                            </div>
+                        </div>
+                        <p class="text-muted small">Take profit will be set at: Entry Price ± (ATR × TP ATR Multiplier)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">Position Size Settings</div>
+                <div class="mb-3">
+                    <label class="form-label">Lot Size Preference:</label>
+                    <div class="lot-selector">
+                        <div class="lot-option active" data-lot-type="standard">Standard (100,000)</div>
+                        <div class="lot-option" data-lot-type="mini">Mini (10,000)</div>
+                        <div class="lot-option" data-lot-type="micro">Micro (1,000)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg" id="calculate-btn">Calculate Position Size</button>
+            </div>
+        </form>
+
+        <div class="result-box" id="result-container" style="display: none;">
+            <h3 class="result-title">Calculation Results</h3>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p>Position Size (Lots)</p>
+                    <div class="result-value" id="position-size-lots">0.00</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p>Position Size (Units)</p>
+                    <div class="result-value" id="position-size-units">0</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p>Risk Amount</p>
+                    <div class="result-value" id="risk-amount">$0.00</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p>Pip Value</p>
+                    <div class="result-value" id="pip-value">$0.00</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p>Stop Loss Distance</p>
+                    <div class="result-value" id="stop-loss-distance">0 pips</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p>Take Profit Distance</p>
+                    <div class="result-value" id="take-profit-distance">0 pips</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p>Risk-to-Reward Ratio</p>
+                    <div class="result-value" id="risk-reward-ratio-display">-</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p>Potential Profit</p>
+                    <div class="result-value profit-indicator" id="potential-profit">$0.00</div>
+                </div>
+            </div>
+            
+            <div class="debug-info" id="debug-info">
+                <h5>Debug Information</h5>
+                <div id="debug-content"></div>
+            </div>
+            
+            <button type="button" class="toggle-logs-btn" id="toggle-logs-btn">Show Activity Logs</button>
+            <div class="log-container" id="log-container" style="display: none;">
+                <div id="log-entries"></div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <p><strong>HIGH RISK WARNING:</strong> Foreign exchange trading carries a high level of risk that may not be suitable for all investors. Leverage creates additional risk and loss exposure. Before you decide to trade foreign exchange, carefully consider your investment objectives, experience level, and risk tolerance. You could lose some or all of your initial investment. Do not invest money that you cannot afford to lose.</p>
+            <p>Exchange rates are provided by <span id="api-name-footer">CurrencyFreaks API</span>. Last updated: <span id="api-update-time">-</span></p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Logger function for tracking API calls and calculations
+            const logger = {
+                entries: [],
+                maxEntries: 200,
+                
+                // Log API call
+                logApi: function(action, payload, response = null) {
+                    const entry = {
+                        type: 'api',
+                        timestamp: new Date(),
+                        action: action,
+                        payload: payload,
+                        response: response
+                    };
+                    this.addEntry(entry);
+                    console.log(`API ${action}:`, { payload, response });
+                },
+                
+                // Log calculation
+                logCalculation: function(action, inputs, outputs) {
+                    const entry = {
+                        type: 'calculation',
+                        timestamp: new Date(),
+                        action: action,
+                        inputs: inputs,
+                        outputs: outputs
+                    };
+                    this.addEntry(entry);
+                    console.log(`CALC ${action}:`, { inputs, outputs });
+                },
+                
+                // Log error
+                logError: function(action, error, context = null) {
+                    const entry = {
+                        type: 'error',
+                        timestamp: new Date(),
+                        action: action,
+                        error: error,
+                        context: context
+                    };
+                    this.addEntry(entry);
+                    console.error(`ERROR ${action}:`, error, context);
+                },
+                
+                // Add entry to log
+                addEntry: function(entry) {
+                    this.entries.unshift(entry); // Add to beginning
+                    if (this.entries.length > this.maxEntries) {
+                        this.entries.pop(); // Remove oldest if exceeding max
+                    }
+                    this.updateDisplay();
+                },
+                
+                // Update the log display
+                updateDisplay: function() {
+                    const $logEntries = $('#log-entries');
+                    $logEntries.empty();
+                    
+                    this.entries.forEach(entry => {
+                        const time = entry.timestamp.toLocaleTimeString();
+                        let html = `<div class="log-entry ${entry.type}">`;
+                        html += `<span class="log-timestamp">[${time}]</span>`;
+                        
+                        if (entry.type === 'api') {
+                            html += `<strong>API ${entry.action}</strong>: `;
+                            html += `<span>Payload: ${JSON.stringify(entry.payload)}</span>`;
+                            if (entry.response) {
+                                html += `<br><span>Response: ${JSON.stringify(entry.response).substring(0, 200)}...</span>`;
+                            }
+                        } else if (entry.type === 'calculation') {
+                            html += `<strong>CALC ${entry.action}</strong>: `;
+                            html += `<span>Inputs: ${JSON.stringify(entry.inputs)}</span>`;
+                            html += `<br><span>Outputs: ${JSON.stringify(entry.outputs)}</span>`;
+                        } else if (entry.type === 'error') {
+                            html += `<strong>ERROR ${entry.action}</strong>: `;
+                            html += `<span>${entry.error}</span>`;
+                            if (entry.context) {
+                                html += `<br><span>Context: ${JSON.stringify(entry.context)}</span>`;
+                            }
+                        }
+                        
+                        html += `</div>`;
+                        $logEntries.append(html);
+                    });
+                },
+                
+                // Clear all logs
+                clear: function() {
+                    this.entries = [];
+                    this.updateDisplay();
+                }
+            };
+            
+            // Toggle logs button
+            $('#toggle-logs-btn').click(function() {
+                const $logContainer = $('#log-container');
+                const isVisible = $logContainer.is(':visible');
+                
+                if (isVisible) {
+                    $logContainer.hide();
+                    $(this).text('Show Activity Logs');
+                } else {
+                    $logContainer.show();
+                    $(this).text('Hide Activity Logs');
+                }
+            });
+            
+            // API keys (you should replace these with your own keys)
+            const API_KEYS = {
+                currencyfreaks: 'YOUR_CURRENCYFREAKS_API_KEY',
+                fxrates: 'YOUR_FXRATES_API_KEY'
+            };
+            
+            // Selected API
+            let selectedApi = 'currencyfreaks';
+            
+            // Store forex rates
+            let forexRates = {};
+            let lastUpdateTime = null;
+            
+            // Selected lot size type
+            let selectedLotSize = 'standard';
+            
+            // ATR value
+            let currentATR = 0;
+            
+            // Global timeframe
+            let globalTimeframe = '4h';
+            
+            // Timeframe conversion factors for ATR (relative to daily timeframe)
+            const timeframeFactors = {
+                '1m': 0.05,   // 1 minute is roughly 5% of daily ATR
+                '5m': 0.12,   // 5 minutes is roughly 12% of daily ATR
+                '15m': 0.22,  // 15 minutes is roughly 22% of daily ATR
+                '30m': 0.32,  // 30 minutes is roughly 32% of daily ATR
+                '1h': 0.45,   // 1 hour is roughly 45% of daily ATR
+                '4h': 0.67,   // 4 hours is roughly 67% of daily ATR
+                '8h': 0.82,   // 8 hours is roughly 82% of daily ATR
+                '1d': 1.0     // Daily is the reference (100%)
+            };
+            
+            // Default ATR values by currency pair (fallback when API not available)
+            // These are daily ATR values that will be scaled according to timeframe
+            const defaultDailyATRValues = {
+                "EURUSD": 0.00120,
+                "GBPUSD": 0.00165,
+                "USDJPY": 1.420,
+                "AUDUSD": 0.00105,
+                "USDCAD": 0.00125,
+                "USDCHF": 0.00115,
+                "NZDUSD": 0.00095,
+                "EURJPY": 1.650,
+                "GBPJPY": 2.150,
+                "EURGBP": 0.00085,
+                "AUDJPY": 1.250,
+                "EURAUD": 0.00180,
+                "GBPAUD": 0.00225,
+                "XAUUSD": 30.00
+            };
+            
+            // Lot size values
+            const lotSizes = {
+                'standard': 100000,
+                'mini': 10000,
+                'micro': 1000
+            };
+            
+            // Fallback rates in case API fails
+            const fallbackRates = {
+                "EURUSD": 1.15403,
+                "GBPUSD": 1.35613,
+                "USDJPY": 143.972,
+                "AUDUSD": 0.649,
+                "USDCAD": 1.35934,
+                "USDCHF": 0.81158,
+                "NZDUSD": 0.6142,
+                "EURJPY": 166.1498,
+                "GBPJPY": 195.2473,
+                "EURGBP": 0.8509,
+                "AUDJPY": 93.4378,
+                "EURAUD": 1.7782,
+                "GBPAUD": 2.0895,
+                "XAUUSD": 2450.00
+            };
+
+            // Conversion rates to USD (fallback)
+            const usdConversionRates = {
+                "USD": 1.0,
+                "EUR": 1.15403,
+                "GBP": 1.35613,
+                "JPY": 0.00694,
+                "AUD": 0.649,
+                "CAD": 0.73565,
+                "CHF": 1.2322,
+                "NZD": 0.6142
+            };
+
+            // Timeframe selector
+            $('.timeframe-option').click(function() {
+                $('.timeframe-option').removeClass('active');
+                $(this).addClass('active');
+                
+                const newTimeframe = $(this).data('timeframe');
+                const oldTimeframe = globalTimeframe;
+                globalTimeframe = newTimeframe;
+                
+                logger.logCalculation('GLOBAL_TIMEFRAME_CHANGED', { oldTimeframe, newTimeframe });
+                
+                // Update the ATR timeframe display
+                const timeframeText = $(this).text();
+                $('#atr-timeframe-display').text(timeframeText + ' timeframe');
+                
+                // Recalculate ATR for the new timeframe
+                const currencyPair = $('#currency-pair').val();
+                if (currencyPair) {
+                    // If we have an ATR value, rescale it for the new timeframe
+                    const atrValue = parseFloat($('#atr-value').val());
+                    if (!isNaN(atrValue)) {
+                        const scaledATR = rescaleATRForTimeframeChange(atrValue, oldTimeframe, newTimeframe);
+                        $('#atr-value').val(scaledATR.toFixed(currencyPair.includes('JPY') ? 3 : 5));
+                        logger.logCalculation('ATR_RESCALED_FOR_TIMEFRAME', 
+                            { oldValue: atrValue, oldTimeframe, newTimeframe }, 
+                            { newValue: scaledATR }
+                        );
+                        
+                        // Update ATR-based stop loss
+                        updateATRStopLoss();
+                    } else {
+                        // If no ATR value is set, fetch a new one
+                        fetchATR(currencyPair, globalTimeframe);
+                    }
+                }
+            });
+
+            // Function to rescale ATR when timeframe changes
+            function rescaleATRForTimeframeChange(currentATRValue, fromTimeframe, toTimeframe) {
+                // Calculate ratio between timeframes
+                const fromFactor = timeframeFactors[fromTimeframe];
+                const toFactor = timeframeFactors[toTimeframe];
+                const scalingRatio = toFactor / fromFactor;
+                
+                logger.logCalculation('RESCALE_ATR_FACTORS', 
+                    { fromTimeframe, toTimeframe, fromFactor, toFactor }, 
+                    { scalingRatio }
+                );
+                
+                // Apply scaling
+                return currentATRValue * scalingRatio;
+            }
+
+            // Fetch ATR button click handler
+            $('#fetch-atr-btn').click(function(e) {
+                e.preventDefault();
+                const currencyPair = $('#currency-pair').val();
+                const periods = $('#atr-periods').val();
+                
+                if (currencyPair) {
+                    logger.logApi('FETCH_ATR_INITIATED', { currencyPair, periods, timeframe: globalTimeframe });
+                    fetchATR(currencyPair, globalTimeframe, periods);
+                } else {
+                    alert('Please select a currency pair first');
+                    logger.logError('FETCH_ATR_FAILED', 'No currency pair selected');
+                }
+            });
+            
+            // Function to fetch ATR from API (simulated)
+            function fetchATR(currencyPair, timeframe, periods = '14') {
+                // Log the request
+                logger.logApi('FETCH_ATR_REQUEST', { currencyPair, timeframe, periods });
+                
+                // Normally this would be an API call to a market data provider
+                // For this demo, we'll use default values and add some randomness
+                
+                // Get default daily ATR value for the currency pair
+                let baseATR = defaultDailyATRValues[currencyPair] || 0.0010;
+                
+                // Scale the daily ATR to the selected timeframe
+                const timeframeFactor = timeframeFactors[timeframe];
+                let atrValue = baseATR * timeframeFactor;
+                
+                // Adjust based on periods (fewer periods typically mean more responsive/higher ATR)
+                if (periods === '5') {
+                    atrValue *= 1.2; // 5-period ATR is often ~20% higher than 14-period
+                } else if (periods === '10') {
+                    atrValue *= 1.1; // 10-period ATR is often ~10% higher than 14-period
+                } else if (periods === '20') {
+                    atrValue *= 0.9; // 20-period ATR is often ~10% lower than 14-period
+                }
+                
+                // Add some randomness (±15%) to simulate real market conditions
+                const randomFactor = 0.85 + (Math.random() * 0.3);
+                atrValue = atrValue * randomFactor;
+                
+                // Log the simulated response
+                logger.logApi('FETCH_ATR_RESPONSE', 
+                    { currencyPair, timeframe, periods, baseATR, timeframeFactor }, 
+                    { atrValue }
+                );
+                
+                // Update ATR value input
+                $('#atr-value').val(atrValue.toFixed(currencyPair.includes('JPY') ? 3 : 5));
+                
+                // Store current ATR
+                currentATR = atrValue;
+                
+                // Update ATR-based stop loss
+                updateATRStopLoss();
+                
+                return atrValue;
+            }
+            
+            // Update ATR-based stop loss when ATR value or multiplier changes
+            $('#atr-value, #atr-multiplier').on('input change', function() {
+                updateATRStopLoss();
+            });
+            
+            // Apply ATR to Stop Loss button
+            $('#apply-atr-btn').click(function(e) {
+                e.preventDefault();
+                
+                const atrValue = parseFloat($('#atr-value').val());
+                const atrMultiplier = parseFloat($('#atr-multiplier').val());
+                
+                if (isNaN(atrValue) || isNaN(atrMultiplier)) {
+                    alert('Please enter valid ATR value and multiplier');
+                    logger.logError('APPLY_ATR_TO_SL_FAILED', 'Invalid ATR value or multiplier', { atrValue, atrMultiplier });
+                    return;
+                }
+                
+                logger.logCalculation('APPLY_ATR_TO_SL_STARTED', { atrValue, atrMultiplier });
+                
+                // Calculate ATR-based stop loss in pips
+                const currencyPair = $('#currency-pair').val();
+                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                
+                // Convert ATR to pips
+                const atrPips = atrValue / pipSize;
+                const slPips = Math.round(atrPips * atrMultiplier); // Round to integer
+                
+                logger.logCalculation('APPLY_ATR_TO_SL_CALCULATION', 
+                    { atrValue, atrMultiplier, pipSize, atrPips }, 
+                    { slPips }
+                );
+                
+                // Update the stop loss pips field
+                $('#stop-loss-pips').val(slPips);
+                
+                // Trigger change to update stop loss price
+                $('#stop-loss-pips').trigger('change');
+                
+                // Switch to the fixed pips tab
+                $('#sl-pips-tab').tab('show');
+                
+                logger.logCalculation('APPLY_ATR_TO_SL_COMPLETED', { slPips: slPips });
+            });
+            
+            // Update ATR stop loss when recalculate button is clicked
+            $('#update-atr-sl-btn').click(function(e) {
+                e.preventDefault();
+                logger.logCalculation('UPDATE_ATR_SL_BUTTON_CLICKED', {});
+                updateATRStopLoss();
+                
+                // Show the ATR stop loss tab
+                $('#sl-atr-tab').tab('show');
+            });
+            
+            // Calculate take profit based on ATR
+            $('#calculate-tp-atr-btn').click(function(e) {
+                e.preventDefault();
+                
+                const atrValue = parseFloat($('#atr-value').val());
+                const tpAtrMultiplier = parseFloat($('#tp-atr-multiplier').val());
+                
+                if (isNaN(atrValue) || isNaN(tpAtrMultiplier)) {
+                    alert('Please enter valid ATR value and TP multiplier');
+                    logger.logError('CALCULATE_TP_ATR_FAILED', 'Invalid ATR value or TP multiplier', { atrValue, tpAtrMultiplier });
+                    return;
+                }
+                
+                logger.logCalculation('CALCULATE_TP_ATR_STARTED', { atrValue, tpAtrMultiplier });
+                
+                // Calculate ATR-based take profit in pips
+                const currencyPair = $('#currency-pair').val();
+                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                
+                // Convert ATR to pips
+                const atrPips = atrValue / pipSize;
+                const tpPips = Math.round(atrPips * tpAtrMultiplier); // Round to integer
+                
+                logger.logCalculation('CALCULATE_TP_ATR_CALCULATION', 
+                    { atrValue, tpAtrMultiplier, pipSize, atrPips }, 
+                    { tpPips }
+                );
+                
+                // Update the take profit pips field
+                $('#take-profit-pips').val(tpPips);
+                
+                // Trigger change to update take profit price
+                $('#take-profit-pips').trigger('change');
+                
+                // Switch to the price/pips tab
+                $('#tp-price-tab').tab('show');
+                
+                logger.logCalculation('CALCULATE_TP_ATR_COMPLETED', { tpPips: tpPips });
+            });
+            
+            // Update ATR-based stop loss display
+            function updateATRStopLoss() {
+                const atrValue = parseFloat($('#atr-value').val());
+                const atrMultiplier = parseFloat($('#atr-multiplier').val());
+                
+                if (isNaN(atrValue) || isNaN(atrMultiplier)) {
+                    $('#sl-atr-info, #atr-sl-value').text('- pips');
+                    logger.logCalculation('UPDATE_ATR_SL_SKIPPED', { reason: 'Invalid inputs', atrValue, atrMultiplier });
+                    return;
+                }
+                
+                logger.logCalculation('UPDATE_ATR_SL_STARTED', { atrValue, atrMultiplier });
+                
+                // Calculate ATR-based stop loss in pips
+                const currencyPair = $('#currency-pair').val();
+                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                
+                // Convert ATR to pips
+                const atrPips = atrValue / pipSize;
+                const slPips = Math.round(atrPips * atrMultiplier); // Round to integer
+                
+                logger.logCalculation('UPDATE_ATR_SL_CALCULATION', 
+                    { atrValue, atrMultiplier, pipSize, atrPips }, 
+                    { slPips }
+                );
+                
+                // Update displays
+                $('#sl-atr-pips').text(slPips + ' pips');
+                $('#atr-sl-value').text(slPips);
+                
+                // Store for calculations
+                currentATR = atrValue;
+                
+                logger.logCalculation('UPDATE_ATR_SL_COMPLETED', { slPips: slPips });
+            }
+
+            // Refresh rate button click handler
+            $('#refresh-rate-btn').click(function() {
+                const currencyPair = $('#currency-pair').val();
+                if (currencyPair) {
+                    // Save entry price to check if we need to update it
+                    const oldEntryPrice = $('#entry-price').val();
+                    const useCurrentRateForEntry = !oldEntryPrice;
+                    
+                    logger.logApi('REFRESH_RATE_CLICKED', { currencyPair, useCurrentRateForEntry });
+                    
+                    // Refresh the rate
+                    fetchForexRate(currencyPair, useCurrentRateForEntry);
+                    
+                    // Show a brief animation on the button
+                    const $btn = $(this);
+                    const $icon = $btn.find('i');
+                    $icon.addClass('fa-spin');
+                    setTimeout(function() {
+                        $icon.removeClass('fa-spin');
+                    }, 1000);
+                } else {
+                    alert('Please select a currency pair first');
+                    logger.logError('REFRESH_RATE_FAILED', 'No currency pair selected');
+                }
+            });
+
+            // API selector
+            $('.api-option').click(function() {
+                $('.api-option').removeClass('active');
+                $(this).addClass('active');
+                selectedApi = $(this).data('api');
+                
+                logger.logApi('API_CHANGED', { newApi: selectedApi });
+                
+                // Update API source text
+                let apiName = selectedApi === 'currencyfreaks' ? 'CurrencyFreaks API' : 'FX Rates API';
+                $('#api-source').text(`Exchange rates provided by ${apiName}`);
+                $('#api-name-footer').text(apiName);
+                
+                // Refetch currency pair rates if one is selected
+                const currencyPair = $('#currency-pair').val();
+                if (currencyPair) {
+                    // Save entry price to check if we need to update it
+                    const oldEntryPrice = $('#entry-price').val();
+                    const useCurrentRateForEntry = !oldEntryPrice;
+                    
+                    fetchForexRate(currencyPair, useCurrentRateForEntry);
+                }
+            });
+
+            // Update account currency symbol
+            $('#account-currency').change(function() {
+                const newCurrency = $(this).val();
+                $('.account-currency-symbol').text(newCurrency);
+                logger.logCalculation('ACCOUNT_CURRENCY_CHANGED', { newCurrency });
+            });
+
+            // Fetch forex rate when currency pair changes
+            $('#currency-pair').change(function() {
+                const currencyPair = $(this).val();
+                if (currencyPair) {
+                    logger.logApi('CURRENCY_PAIR_CHANGED', { currencyPair });
+                    
+                    fetchForexRate(currencyPair, true);
+                    
+                    // Also fetch ATR for the new pair
+                    fetchATR(currencyPair, globalTimeframe, $('#atr-periods').val());
+                    
+                    // Clear entry, stop-loss, and take-profit fields
+                    $('#entry-price').val('');
+                    $('#stop-loss-price').val('');
+                    $('#stop-loss-pips').val('50'); // Reset to default
+                    $('#take-profit-price').val('');
+                    $('#take-profit-pips').val('');
+                    
+                    // Update placeholder with appropriate decimal places
+                    if (currencyPair.includes('JPY')) {
+                        $('#entry-price, #stop-loss-price, #take-profit-price, #atr-value').attr('step', '0.001').attr('placeholder', 'e.g., 143.972');
+                    } else if (currencyPair === 'XAUUSD') {
+                        $('#entry-price, #stop-loss-price, #take-profit-price, #atr-value').attr('step', '0.01').attr('placeholder', 'e.g., 2450.00');
+                    } else {
+                        $('#entry-price, #stop-loss-price, #take-profit-price, #atr-value').attr('step', '0.00001').attr('placeholder', 'e.g., 1.15403');
+                    }
+                } else {
+                    $('#rate-display').hide();
+                }
+            });
+
+            // Update ATR when periods changes
+            $('#atr-periods').change(function() {
+                const periods = $(this).val();
+                logger.logCalculation('ATR_PERIODS_CHANGED', { periods });
+                
+                const currencyPair = $('#currency-pair').val();
+                if (currencyPair) {
+                    fetchATR(currencyPair, globalTimeframe, periods);
+                }
+            });
+
+            // Lot size selector
+            $('.lot-option').click(function() {
+                $('.lot-option').removeClass('active');
+                $(this).addClass('active');
+                selectedLotSize = $(this).data('lot-type');
+                logger.logCalculation('LOT_SIZE_CHANGED', { selectedLotSize });
+            });
+
+            // Auto-calculate stop loss price when pips change and entry price is set
+            $('#stop-loss-pips, #entry-price, #trade-direction').on('input change', function() {
+                const entryPrice = parseFloat($('#entry-price').val());
+                const stopLossPips = parseFloat($('#stop-loss-pips').val());
+                const tradeDirection = $('#trade-direction').val();
+                const currencyPair = $('#currency-pair').val();
+                
+                if (!isNaN(entryPrice) && !isNaN(stopLossPips) && currencyPair) {
+                    logger.logCalculation('CALCULATE_SL_PRICE_FROM_PIPS_STARTED', 
+                        { entryPrice, stopLossPips, tradeDirection, currencyPair }
+                    );
+                    
+                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    
+                    let stopLossPrice;
+                    if (tradeDirection === 'buy') {
+                        stopLossPrice = entryPrice - (stopLossPips * pipSize);
+                    } else {
+                        stopLossPrice = entryPrice + (stopLossPips * pipSize);
+                    }
+                    
+                    logger.logCalculation('CALCULATE_SL_PRICE_FROM_PIPS_RESULT', 
+                        { pipDecimalPlaces, pipSize },
+                        { stopLossPrice }
+                    );
+                    
+                    $('#stop-loss-price').val(stopLossPrice.toFixed(pipDecimalPlaces));
+                }
+            });
+
+            // Auto-calculate stop loss pips when price changes
+            $('#stop-loss-price, #entry-price, #trade-direction').on('input change', function() {
+                const entryPrice = parseFloat($('#entry-price').val());
+                const stopLossPrice = parseFloat($('#stop-loss-price').val());
+                const tradeDirection = $('#trade-direction').val();
+                const currencyPair = $('#currency-pair').val();
+                
+                if (!isNaN(entryPrice) && !isNaN(stopLossPrice) && currencyPair) {
+                    logger.logCalculation('CALCULATE_SL_PIPS_FROM_PRICE_STARTED', 
+                        { entryPrice, stopLossPrice, tradeDirection, currencyPair }
+                    );
+                    
+                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    
+                    let stopLossPips;
+                    if (tradeDirection === 'buy') {
+                        stopLossPips = (entryPrice - stopLossPrice) / pipSize;
+                    } else {
+                        stopLossPips = (stopLossPrice - entryPrice) / pipSize;
+                    }
+                    
+                    logger.logCalculation('CALCULATE_SL_PIPS_FROM_PRICE_RESULT', 
+                        { pipDecimalPlaces, pipSize },
+                        { stopLossPips }
+                    );
+                    
+                    // Only update if positive pips and round to integer
+                    if (stopLossPips > 0) {
+                        $('#stop-loss-pips').val(Math.round(stopLossPips));
+                    } else {
+                        logger.logError('CALCULATE_SL_PIPS_FROM_PRICE_ERROR', 'Negative pips calculated', { stopLossPips });
+                    }
+                }
+            });
+
+            // Auto-calculate take profit price when pips change and entry price is set
+            $('#take-profit-pips, #entry-price, #trade-direction').on('input change', function() {
+                const entryPrice = parseFloat($('#entry-price').val());
+                const takeProfitPips = parseFloat($('#take-profit-pips').val());
+                const tradeDirection = $('#trade-direction').val();
+                const currencyPair = $('#currency-pair').val();
+                
+                if (!isNaN(entryPrice) && !isNaN(takeProfitPips) && currencyPair) {
+                    logger.logCalculation('CALCULATE_TP_PRICE_FROM_PIPS_STARTED', 
+                        { entryPrice, takeProfitPips, tradeDirection, currencyPair }
+                    );
+                    
+                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    
+                    let takeProfitPrice;
+                    if (tradeDirection === 'buy') {
+                        takeProfitPrice = entryPrice + (takeProfitPips * pipSize);
+                    } else {
+                        takeProfitPrice = entryPrice - (takeProfitPips * pipSize);
+                    }
+                    
+                    logger.logCalculation('CALCULATE_TP_PRICE_FROM_PIPS_RESULT', 
+                        { pipDecimalPlaces, pipSize },
+                        { takeProfitPrice }
+                    );
+                    
+                    $('#take-profit-price').val(takeProfitPrice.toFixed(pipDecimalPlaces));
+                }
+            });
+
+            // Auto-calculate take profit pips when price changes
+            $('#take-profit-price, #entry-price, #trade-direction').on('input change', function() {
+                const entryPrice = parseFloat($('#entry-price').val());
+                const takeProfitPrice = parseFloat($('#take-profit-price').val());
+                const tradeDirection = $('#trade-direction').val();
+                const currencyPair = $('#currency-pair').val();
+                
+                if (!isNaN(entryPrice) && !isNaN(takeProfitPrice) && currencyPair) {
+                    logger.logCalculation('CALCULATE_TP_PIPS_FROM_PRICE_STARTED', 
+                        { entryPrice, takeProfitPrice, tradeDirection, currencyPair }
+                    );
+                    
+                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    
+                    let takeProfitPips;
+                    if (tradeDirection === 'buy') {
+                        takeProfitPips = (takeProfitPrice - entryPrice) / pipSize;
+                    } else {
+                        takeProfitPips = (entryPrice - takeProfitPrice) / pipSize;
+                    }
+                    
+                    logger.logCalculation('CALCULATE_TP_PIPS_FROM_PRICE_RESULT', 
+                        { pipDecimalPlaces, pipSize },
+                        { takeProfitPips }
+                    );
+                    
+                    // Only update if positive pips and round to integer
+                    if (takeProfitPips > 0) {
+                        $('#take-profit-pips').val(Math.round(takeProfitPips));
+                    } else {
+                        logger.logError('CALCULATE_TP_PIPS_FROM_PRICE_ERROR', 'Negative pips calculated', { takeProfitPips });
+                    }
+                }
+            });
+
+            // Calculate take profit from risk-reward ratio
+            $('#calculate-tp-btn').click(function(e) {
+                e.preventDefault();
+                logger.logCalculation('CALCULATE_TP_FROM_RR_BUTTON_CLICKED', {});
+                calculateTakeProfitFromRiskReward();
+            });
+
+            // Calculate take profit based on risk-reward ratio
+            function calculateTakeProfitFromRiskReward() {
+                const entryPrice = parseFloat($('#entry-price').val() || getCurrentRate($('#currency-pair').val()));
+                const stopLossPrice = parseFloat($('#stop-loss-price').val());
+                const stopLossPips = parseFloat($('#stop-loss-pips').val());
+                const riskRewardRatio = parseFloat($('#risk-reward-ratio-input').val());
+                const tradeDirection = $('#trade-direction').val();
+                const currencyPair = $('#currency-pair').val();
+                
+                logger.logCalculation('CALCULATE_TP_FROM_RR_STARTED', {
+                    entryPrice, stopLossPrice, stopLossPips, riskRewardRatio, tradeDirection, currencyPair
+                });
+                
+                if (!currencyPair) {
+                    alert('Please select a currency pair');
+                    logger.logError('CALCULATE_TP_FROM_RR_ERROR', 'No currency pair selected');
+                    return;
+                }
+                
+                if (isNaN(entryPrice)) {
+                    alert('Please enter an entry price or select a currency pair to use current rate');
+                    logger.logError('CALCULATE_TP_FROM_RR_ERROR', 'No entry price');
+                    return;
+                }
+                
+                // Determine stop loss in pips if not directly entered
+                let actualStopLossPips = stopLossPips;
+                if (isNaN(actualStopLossPips) && !isNaN(stopLossPrice)) {
+                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    
+                    if (tradeDirection === 'buy') {
+                        actualStopLossPips = (entryPrice - stopLossPrice) / pipSize;
+                    } else {
+                        actualStopLossPips = (stopLossPrice - entryPrice) / pipSize;
+                    }
+                    
+                    logger.logCalculation('CALCULATE_TP_FROM_RR_SL_PIPS_CALCULATED', 
+                        { entryPrice, stopLossPrice, pipSize, tradeDirection },
+                        { actualStopLossPips }
+                    );
+                }
+                
+                if (isNaN(actualStopLossPips) || actualStopLossPips <= 0) {
+                    alert('Please enter a valid stop loss');
+                    logger.logError('CALCULATE_TP_FROM_RR_ERROR', 'Invalid stop loss', { actualStopLossPips });
+                    return;
+                }
+                
+                if (isNaN(riskRewardRatio) || riskRewardRatio <= 0) {
+                    alert('Please enter a valid risk-reward ratio');
+                    logger.logError('CALCULATE_TP_FROM_RR_ERROR', 'Invalid risk-reward ratio', { riskRewardRatio });
+                    return;
+                }
+                
+                // Calculate take profit pips based on risk-reward ratio and round to integer
+                const takeProfitPips = Math.round(actualStopLossPips * riskRewardRatio);
+                
+                logger.logCalculation('CALCULATE_TP_FROM_RR_TP_PIPS_CALCULATED', 
+                    { actualStopLossPips, riskRewardRatio },
+                    { takeProfitPips }
+                );
+                
+                // Calculate take profit price
+                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                
+                let takeProfitPrice;
+                if (tradeDirection === 'buy') {
+                    takeProfitPrice = entryPrice + (takeProfitPips * pipSize);
+                } else {
+                    takeProfitPrice = entryPrice - (takeProfitPips * pipSize);
+                }
+                
+                logger.logCalculation('CALCULATE_TP_FROM_RR_TP_PRICE_CALCULATED', 
+                    { entryPrice, takeProfitPips, pipSize, tradeDirection },
+                    { takeProfitPrice }
+                );
+                
+                // Update the take profit fields
+                $('#take-profit-pips').val(takeProfitPips);
+                $('#take-profit-price').val(takeProfitPrice.toFixed(pipDecimalPlaces));
+                
+                // Switch to the price/pips tab to show the results
+                $('#tp-price-tab').tab('show');
+                
+                logger.logCalculation('CALCULATE_TP_FROM_RR_COMPLETED', {
+                    takeProfitPips: takeProfitPips,
+                    takeProfitPrice: takeProfitPrice.toFixed(pipDecimalPlaces)
+                });
+            }
+
+            // Calculate position size when form is submitted
+            $('#position-size-form').submit(function(e) {
+                e.preventDefault();
+                logger.logCalculation('CALCULATE_POSITION_SIZE_FORM_SUBMITTED', { timeframe: globalTimeframe });
+                calculatePositionSize();
+            });
+
+            // Function to fetch forex rate
+            function fetchForexRate(currencyPair, updateEntryPrice = false) {
+                $('#rate-display').show();
+                $('#current-rate').html('<div class="loading-spinner"></div>');
+                $('#timestamp').text('Fetching...');
+                
+                logger.logApi('FETCH_FOREX_RATE_STARTED', { currencyPair, updateEntryPrice, selectedApi });
+                
+                // Extract base and quote currencies
+                const baseCurrency = currencyPair.substring(0, 3);
+                const quoteCurrency = currencyPair.substring(3, 6);
+                
+                // Special handling for Gold (XAU/USD)
+                if (currencyPair === 'XAUUSD') {
+                    // For gold, we might need a different endpoint or API
+                    // For now, use fallback rate
+                    logger.logApi('FETCH_FOREX_RATE_GOLD_SPECIAL_HANDLING', { currencyPair });
+                    displayRate(fallbackRates[currencyPair], currencyPair, updateEntryPrice);
+                    return;
+                }
+                
+                // Determine which API to use
+                if (selectedApi === 'currencyfreaks') {
+                    fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
+                } else {
+                    fetchFromFxRates(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
+                }
+            }
+            
+            // Fetch from CurrencyFreaks API
+            function fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice) {
+                // Create URL for API request - using CurrencyFreaks latest rates endpoint
+                const url = `https://api.currencyfreaks.com/v2.0/rates/latest?apikey=${API_KEYS.currencyfreaks}&symbols=${baseCurrency},${quoteCurrency}`;
+                
+                logger.logApi('FETCH_CURRENCYFREAKS_REQUEST', { url, baseCurrency, quoteCurrency });
+                
+                // Fetch data from API
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        logger.logApi('FETCH_CURRENCYFREAKS_RESPONSE', { baseCurrency, quoteCurrency }, data);
+                        
+                        if (data && data.rates) {
+                            // Calculate the exchange rate
+                            // If the base currency is USD (base in API response)
+                            let rate;
+                            if (baseCurrency === 'USD') {
+                                rate = data.rates[quoteCurrency];
+                            } else if (quoteCurrency === 'USD') {
+                                rate = 1 / parseFloat(data.rates[baseCurrency]);
+                            } else {
+                                // Cross rate calculation
+                                const baseToUsd = parseFloat(data.rates[baseCurrency]);
+                                const quoteToUsd = parseFloat(data.rates[quoteCurrency]);
+                                rate = quoteToUsd / baseToUsd;
+                            }
+                            
+                            logger.logCalculation('FETCH_CURRENCYFREAKS_RATE_CALCULATED', 
+                                { baseCurrency, quoteCurrency, baseToUsd: data.rates[baseCurrency], quoteToUsd: data.rates[quoteCurrency] },
+                                { rate }
+                            );
+                            
+                            // Store rate
+                            forexRates[currencyPair] = rate;
+                            lastUpdateTime = new Date();
+                            
+                            // Display rate
+                            displayRate(rate, currencyPair, updateEntryPrice);
+                        } else {
+                            throw new Error('Invalid API response');
+                        }
+                    })
+                    .catch(error => {
+                        logger.logError('FETCH_CURRENCYFREAKS_ERROR', error.message, { baseCurrency, quoteCurrency });
+                        
+                        // Try FX Rates API as a fallback if it's not already selected
+                        if (selectedApi !== 'fxrates') {
+                            logger.logApi('FETCH_CURRENCYFREAKS_FALLBACK_TO_FXRATES', { baseCurrency, quoteCurrency });
+                            fetchFromFxRates(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
+                        } else {
+                            useFallbackRate(currencyPair, updateEntryPrice);
+                        }
+                    });
+            }
+            
+            // Fetch from FX Rates API
+            function fetchFromFxRates(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice) {
+                // Create URL for API request
+                const url = `https://api.fxratesapi.com/latest?api_key=${API_KEYS.fxrates}&currencies=${quoteCurrency}&base=${baseCurrency}`;
+                
+                logger.logApi('FETCH_FXRATES_REQUEST', { url, baseCurrency, quoteCurrency });
+                
+                // Fetch data from API
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        logger.logApi('FETCH_FXRATES_RESPONSE', { baseCurrency, quoteCurrency }, data);
+                        
+                        if (data && data.rates) {
+                            // Get the rate directly from the response
+                            const rate = parseFloat(data.rates[quoteCurrency]);
+                            
+                            logger.logCalculation('FETCH_FXRATES_RATE_EXTRACTED', 
+                                { quoteCurrency },
+                                { rate }
+                            );
+                            
+                            // Store rate
+                            forexRates[currencyPair] = rate;
+                            lastUpdateTime = new Date();
+                            
+                            // Display rate
+                            displayRate(rate, currencyPair, updateEntryPrice);
+                        } else {
+                            throw new Error('Invalid API response');
+                        }
+                    })
+                    .catch(error => {
+                        logger.logError('FETCH_FXRATES_ERROR', error.message, { baseCurrency, quoteCurrency });
+                        
+                        // Try CurrencyFreaks API as a fallback if it's not already selected
+                        if (selectedApi !== 'currencyfreaks') {
+                            logger.logApi('FETCH_FXRATES_FALLBACK_TO_CURRENCYFREAKS', { baseCurrency, quoteCurrency });
+                            fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
+                        } else {
+                            useFallbackRate(currencyPair, updateEntryPrice);
+                        }
+                    });
+            }
+            
+            // Use fallback rate when both APIs fail
+            function useFallbackRate(currencyPair, updateEntryPrice) {
+                if (fallbackRates[currencyPair]) {
+                    logger.logApi('USING_FALLBACK_RATE', { currencyPair, rate: fallbackRates[currencyPair] });
+                    displayRate(fallbackRates[currencyPair], currencyPair, updateEntryPrice, true);
+                } else {
+                    logger.logError('FALLBACK_RATE_NOT_AVAILABLE', 'No fallback rate available for this pair', { currencyPair });
+                    $('#current-rate').text('Rate unavailable');
+                    $('#timestamp').text('Could not fetch rate');
+                }
+            }
+
+            // Function to display rate
+            function displayRate(rate, currencyPair, updateEntryPrice = false, isFallback = false) {
+                const formatted = formatRate(rate, currencyPair);
+                $('#current-rate').text(formatted);
+                
+                logger.logCalculation('DISPLAY_RATE', { rate, currencyPair, formatted, updateEntryPrice, isFallback });
+                
+                if (isFallback) {
+                    $('#timestamp').text('Using fallback rate (API unavailable)');
+                } else {
+                    const timeString = lastUpdateTime.toLocaleTimeString() + ' ' + lastUpdateTime.toLocaleDateString();
+                    $('#timestamp').text(timeString);
+                    $('#api-update-time').text(timeString);
+                }
+                
+                // Update entry price field if requested and no manual entry has been made
+                if (updateEntryPrice && !$('#entry-price').val()) {
+                    $('#entry-price').val(formatted);
+                    logger.logCalculation('ENTRY_PRICE_UPDATED_FROM_RATE', { newEntryPrice: formatted });
+                }
+                
+                // Recalculate stop loss/take profit values if they depend on entry price
+                updateDependentValues();
+            }
+            
+            // Update any dependent values when entry price changes
+            function updateDependentValues() {
+                logger.logCalculation('UPDATE_DEPENDENT_VALUES_STARTED', {});
+                
+                // Trigger events to recalculate stop loss/take profit
+                if ($('#stop-loss-pips').val()) {
+                    $('#stop-loss-pips').trigger('input');
+                    logger.logCalculation('RECALCULATED_SL_PRICE_FROM_PIPS', {});
+                }
+                if ($('#take-profit-pips').val()) {
+                    $('#take-profit-pips').trigger('input');
+                    logger.logCalculation('RECALCULATED_TP_PRICE_FROM_PIPS', {});
+                }
+            }
+
+            // Get pip decimal places based on currency pair
+            function getPipDecimalPlaces(currencyPair) {
+                let decimals;
+                if (currencyPair.includes('JPY')) {
+                    decimals = 3; // JPY pairs have 3 decimal places (2 pips)
+                } else if (currencyPair === 'XAUUSD') {
+                    decimals = 2; // Gold has 2 decimal places
+                } else {
+                    decimals = 5; // Most currency pairs have 5 decimal places (4 pips)
+                }
+                
+                logger.logCalculation('GET_PIP_DECIMAL_PLACES', { currencyPair }, { decimals });
+                return decimals;
+            }
+
+            // Format rate according to currency pair
+            function formatRate(rate, currencyPair) {
+                const decimalPlaces = getPipDecimalPlaces(currencyPair);
+                const formatted = rate.toFixed(decimalPlaces);
+                logger.logCalculation('FORMAT_RATE', { rate, currencyPair, decimalPlaces }, { formatted });
+                return formatted;
+            }
+
+            // Calculate position size
+            function calculatePositionSize() {
+                // Get form values
+                const currencyPair = $('#currency-pair').val();
+                const accountCurrency = $('#account-currency').val();
+                const accountSize = parseFloat($('#account-size').val());
+                const riskPercentage = parseFloat($('#risk-percentage').val()) / 100;
+                const tradeDirection = $('#trade-direction').val();
+                const lotSize = lotSizes[selectedLotSize];
+                
+                logger.logCalculation('CALCULATE_POSITION_SIZE_STARTED', {
+                    currencyPair, accountCurrency, accountSize, riskPercentage, tradeDirection, lotSize, timeframe: globalTimeframe
+                });
+                
+                // Get stop loss details
+                const entryPrice = parseFloat($('#entry-price').val() || getCurrentRate(currencyPair));
+                let stopLossPrice = parseFloat($('#stop-loss-price').val());
+                let stopLossPips = parseFloat($('#stop-loss-pips').val());
+                
+                logger.logCalculation('SL_INPUT_VALUES', { entryPrice, stopLossPrice, stopLossPips });
+                
+                // If ATR-based stop loss is active, use that
+                if ($('#sl-atr-tab').hasClass('active')) {
+                    const atrValue = parseFloat($('#atr-value').val());
+                    const atrMultiplier = parseFloat($('#atr-multiplier').val());
+                    
+                    logger.logCalculation('USING_ATR_BASED_SL', { atrValue, atrMultiplier });
+                    
+                    if (!isNaN(atrValue) && !isNaN(atrMultiplier)) {
+                        // Calculate ATR-based stop loss in pips
+                        const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                        const pipSize = Math.pow(10, -pipDecimalPlaces);
+                        
+                        // Convert ATR to pips
+                        const atrPips = atrValue / pipSize;
+                        stopLossPips = Math.round(atrPips * atrMultiplier); // Ensure integer
+                        
+                        logger.logCalculation('ATR_SL_CALCULATION', 
+                            { atrValue, atrMultiplier, pipSize, atrPips },
+                            { stopLossPips }
+                        );
+                        
+                        // Calculate stop loss price
+                        if (tradeDirection === 'buy') {
+                            stopLossPrice = entryPrice - (stopLossPips * pipSize);
+                        } else {
+                            stopLossPrice = entryPrice + (stopLossPips * pipSize);
+                        }
+                        
+                        logger.logCalculation('ATR_SL_PRICE_CALCULATION', 
+                            { entryPrice, stopLossPips, pipSize, tradeDirection },
+                            { stopLossPrice }
+                        );
+                    }
+                }
+                
+                // Get take profit details
+                let takeProfitPrice = parseFloat($('#take-profit-price').val());
+                let takeProfitPips = parseInt($('#take-profit-pips').val(), 10); // Parse as integer
+                
+                logger.logCalculation('TP_INPUT_VALUES', { takeProfitPrice, takeProfitPips });
+                
+                // If take profit price is not provided, calculate it from pips
+                if (isNaN(takeProfitPrice) && !isNaN(takeProfitPips)) {
+                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    
+                    if (tradeDirection === 'buy') {
+                        takeProfitPrice = entryPrice + (takeProfitPips * pipSize);
+                    } else {
+                        takeProfitPrice = entryPrice - (takeProfitPips * pipSize);
+                    }
+                    
+                    logger.logCalculation('CALCULATE_TP_PRICE_FROM_PIPS', 
+                        { entryPrice, takeProfitPips, pipSize, tradeDirection },
+                        { takeProfitPrice }
+                    );
+                }
+                // If take profit pips is not provided, calculate it from price
+                else if (!isNaN(takeProfitPrice) && isNaN(takeProfitPips)) {
+                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    
+                    if (tradeDirection === 'buy') {
+                        takeProfitPips = Math.round((takeProfitPrice - entryPrice) / pipSize); // Ensure integer
+                    } else {
+                        takeProfitPips = Math.round((entryPrice - takeProfitPrice) / pipSize); // Ensure integer
+                    }
+                    
+                    logger.logCalculation('CALCULATE_TP_PIPS_FROM_PRICE', 
+                        { entryPrice, takeProfitPrice, pipSize, tradeDirection },
+                        { takeProfitPips }
+                    );
+                }
+
+                // Validate stop loss
+                if (isNaN(stopLossPips) || stopLossPips <= 0) {
+                    alert('Please enter a valid stop loss');
+                    logger.logError('CALCULATE_POSITION_SIZE_ERROR', 'Invalid stop loss', { stopLossPips });
+                    return;
+                }
+
+                // Calculate risk amount
+                const riskAmount = accountSize * riskPercentage;
+                logger.logCalculation('RISK_AMOUNT_CALCULATION', { accountSize, riskPercentage }, { riskAmount });
+
+                // Parse currency pair
+                const baseCurrency = currencyPair.substring(0, 3);
+                const quoteCurrency = currencyPair.substring(3, 6);
+
+                // Debug variables
+                let debugInfo = {};
+                debugInfo.globalTimeframe = globalTimeframe;
+                
+                // Get pip size based on currency pair
+                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
+                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                
+                // Calculate pip value in quote currency per standard lot
+                let pipValueInQuoteCurrency;
+                
+                // Standard lot size for reference (100,000 units)
+                const standardLotSize = 100000;
+                
+                // Special handling for different currency pairs
+                if (currencyPair === 'XAUUSD') {
+                    // Gold is quoted in USD per oz, and 1 pip is 0.01 USD
+                    // For gold, standard lot is usually 100 oz
+                    pipValueInQuoteCurrency = pipSize * 100; // 0.01 * 100 = 1 USD per pip for 1 standard lot
+                } else if (currencyPair.includes('JPY')) {
+                    // For JPY pairs, 1 pip is 0.01
+                    pipValueInQuoteCurrency = 0.01 * (standardLotSize / 100); // 0.01 * 1000 = 10 JPY per pip for 1 standard lot
+                } else {
+                    // For regular forex pairs
+                    pipValueInQuoteCurrency = 0.0001 * standardLotSize; // 0.0001 * 100000 = 10 USD/EUR/etc per pip for 1 standard lot
+                }
+                
+                logger.logCalculation('PIP_VALUE_IN_QUOTE_CURRENCY', 
+                    { currencyPair, pipSize, standardLotSize },
+                    { pipValueInQuoteCurrency }
+                );
+                
+                // Add to debug info
+                debugInfo.pipSize = pipSize;
+                debugInfo.pipValueInQuoteCurrency = pipValueInQuoteCurrency;
+                debugInfo.standardLotSize = standardLotSize;
+
+                // Convert pip value to account currency
+                let pipValueInAccountCurrency;
+                
+                if (quoteCurrency === accountCurrency) {
+                    // Direct quote to account currency (e.g., EUR/USD with USD account)
+                    pipValueInAccountCurrency = pipValueInQuoteCurrency;
+                    logger.logCalculation('PIP_VALUE_DIRECT_QUOTE', 
+                        { quoteCurrency, accountCurrency },
+                        { pipValueInAccountCurrency }
+                    );
+                } else if (baseCurrency === accountCurrency) {
+                    // Base currency is account currency (e.g., EUR/USD with EUR account)
+                    pipValueInAccountCurrency = pipValueInQuoteCurrency / entryPrice;
+                    logger.logCalculation('PIP_VALUE_BASE_CURRENCY', 
+                        { baseCurrency, accountCurrency, entryPrice },
+                        { pipValueInAccountCurrency }
+                    );
+                } else {
+                    // Cross rate - need conversion through another currency
+                    // We'll try to get conversion rates from our forexRates object
+                    logger.logCalculation('PIP_VALUE_CROSS_RATE_STARTED', 
+                        { baseCurrency, quoteCurrency, accountCurrency }
+                    );
+                    
+                    // Convert to USD first (as a common intermediary)
+                    let quoteToUsd;
+                    if (quoteCurrency === 'USD') {
+                        quoteToUsd = 1;
+                    } else {
+                        // Try to get from forexRates if we have it
+                        const quotePair = `${quoteCurrency}USD`;
+                        const usdQuotePair = `USD${quoteCurrency}`;
+                        
+                        if (forexRates[quotePair]) {
+                            quoteToUsd = forexRates[quotePair];
+                        } else if (forexRates[usdQuotePair]) {
+                            quoteToUsd = 1 / forexRates[usdQuotePair];
+                        } else if (usdConversionRates[quoteCurrency]) {
+                            quoteToUsd = usdConversionRates[quoteCurrency];
+                        } else {
+                            quoteToUsd = 1; // Fallback
+                        }
+                    }
+                    
+                    logger.logCalculation('QUOTE_TO_USD_CONVERSION', 
+                        { quoteCurrency },
+                        { quoteToUsd }
+                    );
+                    
+                    // Convert USD to account currency
+                    let usdToAccount;
+                    if (accountCurrency === 'USD') {
+                        usdToAccount = 1;
+                    } else {
+                        // Try to get from forexRates if we have it
+                        const accountPair = `USD${accountCurrency}`;
+                        const accountUsdPair = `${accountCurrency}USD`;
+                        
+                        if (forexRates[accountPair]) {
+                            usdToAccount = forexRates[accountPair];
+                        } else if (forexRates[accountUsdPair]) {
+                            usdToAccount = 1 / forexRates[accountUsdPair];
+                        } else if (usdConversionRates[accountCurrency]) {
+                            usdToAccount = 1 / usdConversionRates[accountCurrency];
+                        } else {
+                            usdToAccount = 1; // Fallback
+                        }
+                    }
+                    
+                    logger.logCalculation('USD_TO_ACCOUNT_CONVERSION', 
+                        { accountCurrency },
+                        { usdToAccount }
+                    );
+                    
+                    // Calculate final pip value in account currency
+                    pipValueInAccountCurrency = pipValueInQuoteCurrency * quoteToUsd * usdToAccount;
+                    
+                    logger.logCalculation('PIP_VALUE_CROSS_RATE_RESULT', 
+                        { pipValueInQuoteCurrency, quoteToUsd, usdToAccount },
+                        { pipValueInAccountCurrency }
+                    );
+                    
+                    // Add conversion rates to debug info
+                    debugInfo.quoteToUsd = quoteToUsd;
+                    debugInfo.usdToAccount = usdToAccount;
+                }
+                
+                // Add to debug info
+                debugInfo.pipValueInAccountCurrency = pipValueInAccountCurrency;
+                
+                // Calculate position size in standard lots (100,000 units)
+                const positionSizeInStandardLots = riskAmount / (stopLossPips * pipValueInAccountCurrency);
+                
+                logger.logCalculation('POSITION_SIZE_IN_STANDARD_LOTS', 
+                    { riskAmount, stopLossPips, pipValueInAccountCurrency },
+                    { positionSizeInStandardLots }
+                );
+                
+                // Convert to selected lot size
+                const selectedLotRatio = lotSize / standardLotSize;
+                const positionSizeInSelectedLots = positionSizeInStandardLots / selectedLotRatio;
+                
+                logger.logCalculation('POSITION_SIZE_IN_SELECTED_LOTS', 
+                    { positionSizeInStandardLots, selectedLotRatio, lotSize, standardLotSize },
+                    { positionSizeInSelectedLots }
+                );
+                
+                // Add to debug info
+                debugInfo.positionSizeInStandardLots = positionSizeInStandardLots;
+                debugInfo.selectedLotRatio = selectedLotRatio;
+                debugInfo.positionSizeInSelectedLots = positionSizeInSelectedLots;
+                
+                // Adjust to appropriate lot step (usually 0.01)
+                const adjustedPositionSizeInLots = Math.floor(positionSizeInSelectedLots * 100) / 100;
+                
+                logger.logCalculation('ADJUSTED_POSITION_SIZE', 
+                    { positionSizeInSelectedLots },
+                    { adjustedPositionSizeInLots }
+                );
+                
+                // Calculate position size in units
+                const positionSizeUnits = adjustedPositionSizeInLots * lotSize;
+                
+                logger.logCalculation('POSITION_SIZE_UNITS', 
+                    { adjustedPositionSizeInLots, lotSize },
+                    { positionSizeUnits }
+                );
+                
+                // Calculate actual risk amount with adjusted position size
+                const actualRiskAmount = adjustedPositionSizeInLots * stopLossPips * (pipValueInAccountCurrency * selectedLotRatio);
+                
+                logger.logCalculation('ACTUAL_RISK_AMOUNT', 
+                    { adjustedPositionSizeInLots, stopLossPips, pipValueInAccountCurrency, selectedLotRatio },
+                    { actualRiskAmount }
+                );
+                
+                // Add to debug info
+                debugInfo.adjustedPositionSizeInLots = adjustedPositionSizeInLots;
+                debugInfo.positionSizeUnits = positionSizeUnits;
+                debugInfo.actualRiskAmount = actualRiskAmount;
+                
+                // Calculate potential profit if take profit is set
+                let potentialProfit = 0;
+                let riskRewardRatio = '-';
+                
+                if (!isNaN(takeProfitPips) && takeProfitPips > 0) {
+                    potentialProfit = adjustedPositionSizeInLots * takeProfitPips * (pipValueInAccountCurrency * selectedLotRatio);
+                    riskRewardRatio = (potentialProfit / actualRiskAmount).toFixed(2) + ':1';
+                    
+                    logger.logCalculation('POTENTIAL_PROFIT', 
+                        { adjustedPositionSizeInLots, takeProfitPips, pipValueInAccountCurrency, selectedLotRatio },
+                        { potentialProfit, riskRewardRatio }
+                    );
+                }
+                
+                // Add to debug info
+                debugInfo.potentialProfit = potentialProfit;
+                debugInfo.riskRewardRatio = riskRewardRatio;
+                debugInfo.timeframeFactors = timeframeFactors;
+                
+                // Display debug info
+                $('#debug-content').html(
+                    `<pre>${JSON.stringify(debugInfo, null, 2)}</pre>`
+                );
+
+                // Display results
+                $('#position-size-lots').text(adjustedPositionSizeInLots.toFixed(2));
+                $('#position-size-units').text(Math.round(positionSizeUnits).toLocaleString());
+                $('#risk-amount').text(`${accountCurrency} ${actualRiskAmount.toFixed(2)}`);
+                $('#pip-value').text(`${accountCurrency} ${(pipValueInAccountCurrency * selectedLotRatio * adjustedPositionSizeInLots).toFixed(2)}`);
+                $('#stop-loss-distance').text(`${stopLossPips} pips`);
+                
+                // Display take profit details if available
+                if (!isNaN(takeProfitPips) && takeProfitPips > 0) {
+                    $('#take-profit-distance').text(`${takeProfitPips} pips`);
+                    $('#risk-reward-ratio-display').text(riskRewardRatio);
+                    $('#potential-profit').text(`${accountCurrency} ${potentialProfit.toFixed(2)}`);
+                    $('#potential-profit').addClass('positive');
+                } else {
+                    $('#take-profit-distance').text('Not set');
+                    $('#risk-reward-ratio-display').text('-');
+                    $('#potential-profit').text('Not calculated');
+                    $('#potential-profit').removeClass('positive');
+                }
+                
+                logger.logCalculation('CALCULATE_POSITION_SIZE_COMPLETED', {
+                    positionSizeLots: adjustedPositionSizeInLots.toFixed(2),
+                    positionSizeUnits: Math.round(positionSizeUnits),
+                    riskAmount: actualRiskAmount.toFixed(2),
+                    pipValue: (pipValueInAccountCurrency * selectedLotRatio * adjustedPositionSizeInLots).toFixed(2),
+                    stopLossDistance: stopLossPips,
+                    takeProfitDistance: takeProfitPips || 'Not set',
+                    riskRewardRatio: riskRewardRatio,
+                    potentialProfit: potentialProfit ? potentialProfit.toFixed(2) : 'Not calculated',
+                    timeframe: globalTimeframe
+                });
+                
+                // Show results container
+                $('#result-container').fadeIn();
+            }
+
+            // Get current rate (or fallback)
+            function getCurrentRate(currencyPair) {
+                if (forexRates[currencyPair]) {
+                    logger.logCalculation('GET_CURRENT_RATE_FROM_STORED', { currencyPair }, { rate: forexRates[currencyPair] });
+                    return forexRates[currencyPair];
+                } else if (fallbackRates[currencyPair]) {
+                    logger.logCalculation('GET_CURRENT_RATE_FROM_FALLBACK', { currencyPair }, { rate: fallbackRates[currencyPair] });
+                    return fallbackRates[currencyPair];
+                } else {
+                    logger.logCalculation('GET_CURRENT_RATE_DEFAULT', { currencyPair }, { rate: 1.0000 });
+                    return 1.0000; // Default fallback
+                }
+            }
+
+            // Initialize with default selections
+            if ($('#currency-pair').val()) {
+                fetchForexRate($('#currency-pair').val(), true);
+                fetchATR($('#currency-pair').val(), globalTimeframe, $('#atr-periods').val());
+            }
+            
+            // Log initial timeframe
+            logger.logCalculation('INITIAL_TIMEFRAME_SET', { timeframe: globalTimeframe });
+        });
+    </script>
+
+
+</body></html>
