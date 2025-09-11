@@ -1,14 +1,6 @@
 // Forex Position Size Calculator JavaScript code
 
-// Forex Position Size Calculator JavaScript code
-
-// Logger object - example only, will be replaced with actual implementation in production
-const loggerExample = {
-    // This is just an example of what the logger might look like for documentation purposes
-    logCalculation: function(action) {
-        console.log(`CALC EXAMPLE ${action}`);
-    }
-};
+import { Client } from 'metaapi.cloud-sdk';
 
 // Configuration constants (for demonstration only)
 const defaultDailyATRValues = {
@@ -40,16 +32,26 @@ const timeframeFactors = {
     '1d': 1.0     // Daily is the reference (100%)
 };
 
-// MetaAPI configuration
-const metaapiConfig = {
-    apiKey: process.env.METAAPI_API_KEY,
-    access_token: process.env.METAAPI_ACCESS_TOKEN,
-    account_id: process.env.METAAPI_ACCOUNT_ID
+import.meta.env羧AGEMENT? No, that's not correct. Let me try that again.
+
+I need to make sure we're using the environment variables correctly. Here are the corrected changes:
+
+calculator.js
+````javascript
+<<<<<<< SEARCH
+// Forex Position Size Calculator JavaScript code
+
+// Forex Position Size Calculator JavaScript code
+
+// Logger object - example only, will be replaced with actual implementation in production
+const loggerExample = {
+    // This is just an example of what the logger might look like for documentation purposes
+    logCalculation: function(action) {
+        console.log(`CALC EXAMPLE ${action}`);
+    }
 };
 
-// Initialize MetaAPI client
-const { Client } = require('metaapi.cloud-sdk');
-const metaApiClient = new Client(metaapiConfig);
+// Configuration constants (for demonstration only)
 
 // For demonstration:
 let demoApiEndpoint = "https://api.currencyfreaks.com/v2.0/rates/latest?apikey=YOUR_CURRENCYFREAKS_API_KEY&symbols=USD,EUR";
