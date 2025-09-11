@@ -3,26 +3,6 @@
 import { Client } from 'metaapi.cloud-sdk';
 
 // Configuration constants (for demonstration only)
-
-// For demonstration:
-const defaultDailyATRValues = {
-    "EURUSD": 0.00120,
-    "GBPUSD": 0.00165,
-    "USDJPY": 1.420,
-    "AUDUSD": 0.00105,
-    "USDCAD": 0.00125,
-    "USDCHF": 0.00115,
-    "NZDUSD": 0.00095,
-    "EURJPY": 1.650,
-    "GBPJPY": 2.150,
-    "EURGBP": 0.00085,
-    "AUDJPY": 1.250,
-    "EURAUD": 0.00180,
-    "GBPAUD": 0.00225,
-    "XAUUSD": 30.00
-};
-
-// Configuration constants (for demonstration only)
 const timeframeFactors = {
     '1m': 0.05,   // 1 minute is roughly 5% of daily ATR
     '5m': 0.12,   // 5 minutes is roughly 12% of daily ATR
