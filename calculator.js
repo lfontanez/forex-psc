@@ -1,8 +1,6 @@
 // Forex Position Size Calculator JavaScript code
 
 import { Client } from 'metaapi.cloud-sdk';
-
-// Configuration constants (for demonstration only)
 const timeframeFactors = {
     '1m': 0.05,   // 1 minute is roughly 5% of daily ATR
     '5m': 0.12,   // 5 minutes is roughly 12% of daily ATR
@@ -39,5 +37,3 @@ const loggerExample = {
         console.log(`CALC EXAMPLE ${action}`);
     }
 };
-
-// Configuration constants (for demonstration only)
