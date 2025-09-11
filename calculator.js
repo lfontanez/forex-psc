@@ -41,11 +41,3 @@ const loggerExample = {
 };
 
 // Configuration constants (for demonstration only)
-
-// For demonstration:
-// MetaAPI configuration constants
-const metaapiConfig = {
-    apiKey: process.env.METAAPI_API_KEY,
-    access_token: process.env.METAAPI_ACCESS_TOKEN,
-    account_id: process.env.METAAPI_ACCOUNT_ID
-};
