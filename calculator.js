@@ -3,6 +3,8 @@
 import { Client } from 'metaapi.cloud-sdk';
 
 // Configuration constants (for demonstration only)
+
+// For demonstration:
 const defaultDailyATRValues = {
     "EURUSD": 0.00120,
     "GBPUSD": 0.00165,
@@ -32,9 +34,16 @@ const timeframeFactors = {
     '1d': 1.0     // Daily is the reference (100%)
 };
 
-import.meta.env羧AGEMENT? No, that's not correct. Let me try that again.
+// Forex Position Size Calculator JavaScript code
 
-I need to make sure we're using the environment variables correctly. Here are the corrected changes:
+import { Client } from 'metaapi.cloud-sdk';
+
+// Initialize MetaAPI client with environment variables
+const metaApiClient = new Client({
+    apiKey: process.env.METAAPI_API_KEY,
+    access_token: process.env.METAAPI_ACCESS_TOKEN,
+    account_id: process.env.METAAPI_ACCOUNT_ID
+});
 
 calculator.js
 ````javascript
@@ -54,4 +63,9 @@ const loggerExample = {
 // Configuration constants (for demonstration only)
 
 // For demonstration:
-let demoApiEndpoint = "https://api.currencyfreaks.com/v2.0/rates/latest?apikey=YOUR_CURRENCYFREAKS_API_KEY&symbols=USD,EUR";
+// MetaAPI configuration constants
+const metaapiConfig = {
+    apiKey: process.env.METAAPI_API_KEY,
+    access_token: process.env.METAAPI_ACCESS_TOKEN,
+    account_id: process.env.METAAPI_ACCOUNT_ID
+};
