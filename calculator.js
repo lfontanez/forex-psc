@@ -1,5 +1,3 @@
-// Forex Position Size Calculator JavaScript code
-
 import { Client } from 'metaapi.cloud-sdk';
 
 // Initialize MetaAPI client with environment variables
