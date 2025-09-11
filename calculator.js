@@ -40,11 +40,16 @@ const timeframeFactors = {
     '1d': 1.0     // Daily is the reference (100%)
 };
 
-// API key placeholders - for documentation purposes only!
-const API_KEYS_EXAMPLE = {
-    currencyfreaks: 'YOUR_CURRENCYFREAKS_API_KEY', // Replace with your CurrencyFreaks key
-    fxrates: 'YOUR_FXRATES_API_KEY'                // Replace with your FX Rates key
+// MetaAPI configuration
+const metaapiConfig = {
+    apiKey: process.env.METAAPI_API_KEY,
+    access_token: process.env.METAAPI_ACCESS_TOKEN,
+    account_id: process.env.METAAPI_ACCOUNT_ID
 };
+
+// Initialize MetaAPI client
+const { Client } = require('metaapi.cloud-sdk');
+const metaApiClient = new Client(metaapiConfig);
 
 // For demonstration:
 let demoApiEndpoint = "https://api.currencyfreaks.com/v2.0/rates/latest?apikey=YOUR_CURRENCYFREAKS_API_KEY&symbols=USD,EUR";
