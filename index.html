@@ -1050,14 +1050,51 @@
                 }
             });
             
-            // Function to fetch ATR from API (simulated)
-            function fetchATR(currencyPair, timeframe, periods = '14') {
+            // Function to fetch ATR from API
+            async function fetchATR(currencyPair, timeframe, periods = '14') {
                 // Log the request
-                logger.logApi('FETCH_ATR_REQUEST', { currencyPair, timeframe, periods });
+                logger.logApi('FETCH_ATR_REQUEST', { currencyPair, timeframe, periods, selectedApi });
                 
-                // Normally this would be an API call to a market data provider
-                // For this demo, we'll use default values and add some randomness
+                let atrValue;
                 
+                // Try MetaAPI first if connected
+                if (selectedApi === 'metaapi' && metaAPIConnected) {
+                    try {
+                        logger.logApi('FETCH_ATR_METAAPI_ATTEMPT', { currencyPair, timeframe, periods });
+                        
+                        // Get real ATR from MetaAPI
+                        atrValue = await metaAPIService.getATR(currencyPair, timeframe, parseInt(periods));
+                        
+                        logger.logApi('FETCH_ATR_METAAPI_SUCCESS', 
+                            { currencyPair, timeframe, periods }, 
+                            { atrValue }
+                        );
+                        
+                    } catch (error) {
+                        logger.logError('FETCH_ATR_METAAPI_FAILED', error.message, { currencyPair, timeframe, periods });
+                        
+                        // Fall back to simulated ATR
+                        atrValue = getSimulatedATR(currencyPair, timeframe, periods);
+                    }
+                } else {
+                    // Use simulated ATR for other APIs
+                    atrValue = getSimulatedATR(currencyPair, timeframe, periods);
+                }
+                
+                // Update ATR value input
+                $('#atr-value').val(atrValue.toFixed(currencyPair.includes('JPY') ? 3 : 5));
+                
+                // Store current ATR
+                currentATR = atrValue;
+                
+                // Update ATR-based stop loss
+                updateATRStopLoss();
+                
+                return atrValue;
+            }
+
+            // Get simulated ATR (fallback method)
+            function getSimulatedATR(currencyPair, timeframe, periods) {
                 // Get default daily ATR value for the currency pair
                 let baseATR = defaultDailyATRValues[currencyPair] || 0.0010;
                 
@@ -1078,20 +1115,10 @@
                 const randomFactor = 0.85 + (Math.random() * 0.3);
                 atrValue = atrValue * randomFactor;
                 
-                // Log the simulated response
-                logger.logApi('FETCH_ATR_RESPONSE', 
+                logger.logApi('FETCH_ATR_SIMULATED', 
                     { currencyPair, timeframe, periods, baseATR, timeframeFactor }, 
                     { atrValue }
                 );
-                
-                // Update ATR value input
-                $('#atr-value').val(atrValue.toFixed(currencyPair.includes('JPY') ? 3 : 5));
-                
-                // Store current ATR
-                currentATR = atrValue;
-                
-                // Update ATR-based stop loss
-                updateATRStopLoss();
                 
                 return atrValue;
             }

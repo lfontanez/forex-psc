@@ -1,36 +1,184 @@
-import { Client } from 'metaapi.cloud-sdk';
+// Forex Position Size Calculator with MetaAPI Integration
+// Following TODO.md Phase 1-2: MetaAPI Integration and Real-time Data
 
-// Initialize MetaAPI client with environment variables
-const metaApiClient = new Client({
-    apiKey: process.env.METAAPI_API_KEY,
-    access_token: process.env.METAAPI_ACCESS_TOKEN,
-    account_id: process.env.METAAPI_ACCOUNT_ID
-});
-
-// Initialize MetaAPI client with environment variables
-const metaApiClient = new Client({
-    apiKey: process.env.METAAPI_API_KEY,
-    access_token: process.env.METAAPI_ACCESS_TOKEN,
-    account_id: process.env.METAAPI_ACCOUNT_ID
-});
-
-calculator.js
-````javascript
-<<<<<<< SEARCH
-// Forex Position Size Calculator JavaScript code
-
-// Forex Position Size Calculator JavaScript code
-
-// Logger object - example only, will be replaced with actual implementation in production
-const loggerExample = {
-    // This is just an example of what the logger might look like for documentation purposes
-    logCalculation: function(action) {
-        console.log(`CALC EXAMPLE ${action}`);
+// MetaAPI Configuration - Browser-compatible approach
+class MetaAPIService {
+    constructor() {
+        this.client = null;
+        this.account = null;
+        this.connection = null;
+        this.isConnected = false;
+        this.config = {
+            // These will be set from environment or user input
+            apiKey: null,
+            accountId: null,
+            region: 'new-york' // Default region
+        };
     }
-};
-// Forex Position Size Calculator JavaScript code
 
-import { Client } from 'metaapi.cloud-sdk';
+    // Initialize MetaAPI client (browser-compatible)
+    async initialize(apiKey, accountId, region = 'new-york') {
+        try {
+            // Store configuration
+            this.config.apiKey = apiKey;
+            this.config.accountId = accountId;
+            this.config.region = region;
+
+            // Import MetaAPI dynamically for browser compatibility
+            const { MetaApi } = await import('https://unpkg.com/metaapi.cloud-sdk@27.0.2/index.js');
+            
+            // Initialize MetaAPI client
+            const api = new MetaApi(apiKey, { region });
+            this.client = api;
+            
+            // Get account
+            this.account = await api.metatraderAccountApi.getAccount(accountId);
+            
+            // Wait for account to be deployed
+            await this.account.waitDeployed();
+            
+            // Create connection
+            this.connection = this.account.getRPCConnection();
+            await this.connection.connect();
+            
+            // Wait for connection to be established
+            await this.connection.waitSynchronized();
+            
+            this.isConnected = true;
+            console.log('MetaAPI connected successfully');
+            return true;
+            
+        } catch (error) {
+            console.error('MetaAPI initialization failed:', error);
+            this.isConnected = false;
+            throw error;
+        }
+    }
+
+    // Get real-time price for a symbol
+    async getPrice(symbol) {
+        if (!this.isConnected || !this.connection) {
+            throw new Error('MetaAPI not connected');
+        }
+
+        try {
+            const price = await this.connection.getSymbolPrice(symbol);
+            return {
+                symbol: symbol,
+                bid: price.bid,
+                ask: price.ask,
+                time: price.time,
+                spread: price.ask - price.bid
+            };
+        } catch (error) {
+            console.error(`Failed to get price for ${symbol}:`, error);
+            throw error;
+        }
+    }
+
+    // Get historical data for ATR calculation
+    async getHistoricalData(symbol, timeframe, startTime, limit = 100) {
+        if (!this.isConnected || !this.connection) {
+            throw new Error('MetaAPI not connected');
+        }
+
+        try {
+            const candles = await this.connection.getCandles(symbol, timeframe, startTime, limit);
+            return candles.map(candle => ({
+                time: candle.time,
+                open: candle.open,
+                high: candle.high,
+                low: candle.low,
+                close: candle.close,
+                volume: candle.tickVolume || candle.realVolume || 0
+            }));
+        } catch (error) {
+            console.error(`Failed to get historical data for ${symbol}:`, error);
+            throw error;
+        }
+    }
+
+    // Calculate ATR from historical data
+    calculateATR(candles, periods = 14) {
+        if (candles.length < periods + 1) {
+            throw new Error(`Insufficient data for ATR calculation. Need at least ${periods + 1} candles.`);
+        }
+
+        const trueRanges = [];
+        
+        for (let i = 1; i < candles.length; i++) {
+            const current = candles[i];
+            const previous = candles[i - 1];
+            
+            const tr1 = current.high - current.low;
+            const tr2 = Math.abs(current.high - previous.close);
+            const tr3 = Math.abs(current.low - previous.close);
+            
+            const trueRange = Math.max(tr1, tr2, tr3);
+            trueRanges.push(trueRange);
+        }
+
+        // Calculate Simple Moving Average of True Range for the specified periods
+        const atrValues = [];
+        for (let i = periods - 1; i < trueRanges.length; i++) {
+            const sum = trueRanges.slice(i - periods + 1, i + 1).reduce((a, b) => a + b, 0);
+            atrValues.push(sum / periods);
+        }
+
+        // Return the most recent ATR value
+        return atrValues[atrValues.length - 1];
+    }
+
+    // Get ATR for a symbol and timeframe
+    async getATR(symbol, timeframe, periods = 14) {
+        try {
+            // Calculate start time (need extra candles for ATR calculation)
+            const now = new Date();
+            const startTime = new Date(now.getTime() - (periods + 10) * this.getTimeframeMilliseconds(timeframe));
+            
+            // Get historical data
+            const candles = await this.getHistoricalData(symbol, timeframe, startTime, periods + 10);
+            
+            // Calculate and return ATR
+            const atr = this.calculateATR(candles, periods);
+            return atr;
+            
+        } catch (error) {
+            console.error(`Failed to calculate ATR for ${symbol}:`, error);
+            throw error;
+        }
+    }
+
+    // Convert timeframe string to milliseconds
+    getTimeframeMilliseconds(timeframe) {
+        const timeframes = {
+            '1m': 60 * 1000,
+            '5m': 5 * 60 * 1000,
+            '15m': 15 * 60 * 1000,
+            '30m': 30 * 60 * 1000,
+            '1h': 60 * 60 * 1000,
+            '4h': 4 * 60 * 60 * 1000,
+            '8h': 8 * 60 * 60 * 1000,
+            '1d': 24 * 60 * 60 * 1000
+        };
+        return timeframes[timeframe] || timeframes['1h'];
+    }
+
+    // Disconnect from MetaAPI
+    async disconnect() {
+        try {
+            if (this.connection) {
+                await this.connection.close();
+            }
+            this.isConnected = false;
+            console.log('MetaAPI disconnected');
+        } catch (error) {
+            console.error('Error disconnecting from MetaAPI:', error);
+        }
+    }
+}
+
+// Timeframe conversion factors for ATR scaling
 const timeframeFactors = {
     '1m': 0.05,   // 1 minute is roughly 5% of daily ATR
     '5m': 0.12,   // 5 minutes is roughly 12% of daily ATR
@@ -42,13 +190,15 @@ const timeframeFactors = {
     '1d': 1.0     // Daily is the reference (100%)
 };
 
-// Forex Position Size Calculator JavaScript code
+// Global MetaAPI service instance
+const metaAPIService = new MetaAPIService();
 
-import { Client } from 'metaapi.cloud-sdk';
-
-// Initialize MetaAPI client with environment variables
-const metaApiClient = new Client({
-    apiKey: process.env.METAAPI_API_KEY,
-    access_token: process.env.METAAPI_ACCESS_TOKEN,
-    account_id: process.env.METAAPI_ACCOUNT_ID
-});
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { MetaAPIService, metaAPIService, timeframeFactors };
+} else {
+    // Browser environment - attach to window
+    window.MetaAPIService = MetaAPIService;
+    window.metaAPIService = metaAPIService;
+    window.timeframeFactors = timeframeFactors;
+}
