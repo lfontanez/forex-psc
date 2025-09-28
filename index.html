@@ -374,8 +374,78 @@
                 <div class="api-selector">
                     <label class="form-label">Rates Data Source:</label>
                     <div>
+                        <span class="api-option" data-api="metaapi">MetaAPI (Real-time)</span>
                         <span class="api-option active" data-api="currencyfreaks">CurrencyFreaks API</span>
                         <span class="api-option" data-api="fxrates">FX Rates API</span>
+                    </div>
+                </div>
+
+                <!-- MetaAPI Configuration Section -->
+                <div id="metaapi-config" class="form-section" style="display: none; background-color: #e8f5e9; border-left: 3px solid #4caf50;">
+                    <div class="form-section-title">MetaAPI Configuration <span class="badge-info">Live Data</span></div>
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label for="metaapi-key" class="form-label">MetaAPI Key:</label>
+                            <input type="password" class="form-control" id="metaapi-key" placeholder="Enter your MetaAPI key">
+                            <small class="text-muted">Your MetaAPI authentication key</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="metaapi-account" class="form-label">Account ID:</label>
+                            <input type="text" class="form-control" id="metaapi-account" placeholder="Enter your account ID">
+                            <small class="text-muted">Your MetaTrader account ID</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label for="metaapi-region" class="form-label">Region:</label>
+                            <select class="form-select" id="metaapi-region">
+                                <option value="new-york">New York</option>
+                                <option value="london">London</option>
+                                <option value="singapore">Singapore</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-success" id="metaapi-connect-btn">
+                                <i class="bi bi-plug"></i> Connect to MetaAPI
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary ms-2" id="metaapi-disconnect-btn" style="display: none;">
+                                <i class="bi bi-plug-fill"></i> Disconnect
+                            </button>
+                        </div>
+                    </div>
+                    <div id="metaapi-status" class="alert alert-info" style="display: none;">
+                        <i class="bi bi-info-circle"></i> <span id="metaapi-status-text">Ready to connect</span>
+                    </div>
+                </div>
+
+                <!-- Manual Data Input Section (when API is offline) -->
+                <div id="manual-data-section" class="form-section" style="display: none; background-color: #fff3cd; border-left: 3px solid #ffc107;">
+                    <div class="form-section-title">Manual Data Entry <span class="badge" style="background-color: #ffc107; color: #000;">Offline Mode</span></div>
+                    <p class="text-warning mb-3">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        API connection unavailable. Please enter market data manually for accurate calculations.
+                    </p>
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label for="manual-current-price" class="form-label">Current Market Price:</label>
+                            <input type="number" class="form-control" id="manual-current-price" step="0.00001" placeholder="Enter current price">
+                            <small class="text-muted">Current market price for the selected pair</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="manual-atr-value" class="form-label">ATR Value:</label>
+                            <input type="number" class="form-control" id="manual-atr-value" step="0.00001" placeholder="Enter ATR value">
+                            <small class="text-muted">Average True Range for the selected timeframe</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-warning" id="apply-manual-data-btn">
+                                <i class="bi bi-check-circle"></i> Apply Manual Data
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary ms-2" id="retry-api-connection-btn">
+                                <i class="bi bi-arrow-clockwise"></i> Retry API Connection
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -828,6 +898,9 @@
             // Selected API
             let selectedApi = 'currencyfreaks';
             
+            // MetaAPI connection status
+            let metaAPIConnected = false;
+            
             // Store forex rates
             let forexRates = {};
             let lastUpdateTime = null;
@@ -1191,8 +1264,22 @@
                 
                 logger.logApi('API_CHANGED', { newApi: selectedApi });
                 
+                // Show/hide MetaAPI configuration
+                if (selectedApi === 'metaapi') {
+                    $('#metaapi-config').show();
+                } else {
+                    $('#metaapi-config').hide();
+                }
+                
                 // Update API source text
-                let apiName = selectedApi === 'currencyfreaks' ? 'CurrencyFreaks API' : 'FX Rates API';
+                let apiName;
+                if (selectedApi === 'metaapi') {
+                    apiName = 'MetaAPI (Real-time)';
+                } else if (selectedApi === 'currencyfreaks') {
+                    apiName = 'CurrencyFreaks API';
+                } else {
+                    apiName = 'FX Rates API';
+                }
                 $('#api-source').text(`Exchange rates provided by ${apiName}`);
                 $('#api-name-footer').text(apiName);
                 
@@ -1206,6 +1293,160 @@
                     fetchForexRate(currencyPair, useCurrentRateForEntry);
                 }
             });
+
+            // MetaAPI Connect button
+            $('#metaapi-connect-btn').click(async function() {
+                const apiKey = $('#metaapi-key').val().trim();
+                const accountId = $('#metaapi-account').val().trim();
+                const region = $('#metaapi-region').val();
+                
+                if (!apiKey || !accountId) {
+                    alert('Please enter both MetaAPI key and Account ID');
+                    return;
+                }
+                
+                logger.logApi('METAAPI_CONNECTION_ATTEMPT', { accountId, region });
+                
+                // Update UI to show connecting state
+                $(this).prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Connecting...');
+                $('#metaapi-status').show().removeClass('alert-success alert-danger').addClass('alert-info');
+                $('#metaapi-status-text').text('Connecting to MetaAPI...');
+                
+                try {
+                    // Initialize MetaAPI
+                    await metaAPIService.initialize(apiKey, accountId, region);
+                    
+                    // Update UI for successful connection
+                    metaAPIConnected = true;
+                    $(this).hide();
+                    $('#metaapi-disconnect-btn').show();
+                    $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
+                    $('#metaapi-status-text').text('Connected to MetaAPI successfully! Real-time data available.');
+                    
+                    logger.logApi('METAAPI_CONNECTION_SUCCESS', { accountId, region });
+                    
+                    // Refresh current pair if selected
+                    const currencyPair = $('#currency-pair').val();
+                    if (currencyPair) {
+                        fetchForexRate(currencyPair, true);
+                    }
+                    
+                } catch (error) {
+                    // Update UI for failed connection
+                    metaAPIConnected = false;
+                    $(this).prop('disabled', false).html('<i class="bi bi-plug"></i> Connect to MetaAPI');
+                    $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
+                    $('#metaapi-status-text').text(`Connection failed: ${error.message}`);
+                    
+                    logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region });
+                }
+            });
+
+            // MetaAPI Disconnect button
+            $('#metaapi-disconnect-btn').click(async function() {
+                logger.logApi('METAAPI_DISCONNECTION_ATTEMPT', {});
+                
+                try {
+                    await metaAPIService.disconnect();
+                    
+                    // Update UI
+                    metaAPIConnected = false;
+                    $(this).hide();
+                    $('#metaapi-connect-btn').show().prop('disabled', false).html('<i class="bi bi-plug"></i> Connect to MetaAPI');
+                    $('#metaapi-status').removeClass('alert-success alert-danger').addClass('alert-info');
+                    $('#metaapi-status-text').text('Disconnected from MetaAPI');
+                    
+                    logger.logApi('METAAPI_DISCONNECTION_SUCCESS', {});
+                    
+                } catch (error) {
+                    logger.logError('METAAPI_DISCONNECTION_FAILED', error.message, {});
+                }
+            });
+
+            // Apply manual data button
+            $('#apply-manual-data-btn').click(function() {
+                const manualPrice = parseFloat($('#manual-current-price').val());
+                const manualATR = parseFloat($('#manual-atr-value').val());
+                const currencyPair = $('#currency-pair').val();
+                
+                if (!currencyPair) {
+                    alert('Please select a currency pair first');
+                    return;
+                }
+                
+                logger.logCalculation('APPLY_MANUAL_DATA_STARTED', { manualPrice, manualATR, currencyPair });
+                
+                // Apply manual price if provided
+                if (!isNaN(manualPrice)) {
+                    $('#entry-price').val(manualPrice.toFixed(getPipDecimalPlaces(currencyPair)));
+                    
+                    // Update rate display
+                    const formatted = formatRate(manualPrice, currencyPair);
+                    $('#current-rate').text(formatted + ' (Manual)');
+                    $('#timestamp').text('Manual entry - ' + new Date().toLocaleTimeString());
+                    $('#rate-display').show();
+                    
+                    // Store rate
+                    forexRates[currencyPair] = manualPrice;
+                    lastUpdateTime = new Date();
+                    
+                    logger.logCalculation('MANUAL_PRICE_APPLIED', { manualPrice, formatted });
+                }
+                
+                // Apply manual ATR if provided
+                if (!isNaN(manualATR)) {
+                    $('#atr-value').val(manualATR.toFixed(currencyPair.includes('JPY') ? 3 : 5));
+                    currentATR = manualATR;
+                    updateATRStopLoss();
+                    
+                    logger.logCalculation('MANUAL_ATR_APPLIED', { manualATR });
+                }
+                
+                // Update dependent values
+                updateDependentValues();
+                
+                // Show success message
+                if (!isNaN(manualPrice) || !isNaN(manualATR)) {
+                    const appliedItems = [];
+                    if (!isNaN(manualPrice)) appliedItems.push('price');
+                    if (!isNaN(manualATR)) appliedItems.push('ATR');
+                    
+                    alert(`Manual ${appliedItems.join(' and ')} applied successfully!`);
+                    logger.logCalculation('APPLY_MANUAL_DATA_SUCCESS', { appliedItems });
+                } else {
+                    alert('Please enter at least one value (price or ATR)');
+                    logger.logError('APPLY_MANUAL_DATA_ERROR', 'No valid values provided');
+                }
+            });
+
+            // Retry API connection button
+            $('#retry-api-connection-btn').click(function() {
+                logger.logApi('RETRY_API_CONNECTION_CLICKED', { selectedApi });
+                
+                const currencyPair = $('#currency-pair').val();
+                if (currencyPair) {
+                    // Hide manual data section temporarily
+                    $('#manual-data-section').hide();
+                    
+                    // Try to fetch data again
+                    fetchForexRate(currencyPair, true);
+                    fetchATR(currencyPair, globalTimeframe, $('#atr-periods').val());
+                } else {
+                    alert('Please select a currency pair first');
+                }
+            });
+
+            // Function to show manual data section when APIs fail
+            function showManualDataSection() {
+                $('#manual-data-section').show();
+                logger.logCalculation('MANUAL_DATA_SECTION_SHOWN', { reason: 'API failure' });
+            }
+
+            // Function to hide manual data section when APIs work
+            function hideManualDataSection() {
+                $('#manual-data-section').hide();
+                logger.logCalculation('MANUAL_DATA_SECTION_HIDDEN', { reason: 'API success' });
+            }
 
             // Update account currency symbol
             $('#account-currency').change(function() {
@@ -1516,21 +1757,91 @@
                 const baseCurrency = currencyPair.substring(0, 3);
                 const quoteCurrency = currencyPair.substring(3, 6);
                 
-                // Special handling for Gold (XAU/USD)
-                if (currencyPair === 'XAUUSD') {
-                    // For gold, we might need a different endpoint or API
-                    // For now, use fallback rate
-                    logger.logApi('FETCH_FOREX_RATE_GOLD_SPECIAL_HANDLING', { currencyPair });
-                    displayRate(fallbackRates[currencyPair], currencyPair, updateEntryPrice);
-                    return;
-                }
-                
                 // Determine which API to use
-                if (selectedApi === 'currencyfreaks') {
+                if (selectedApi === 'metaapi') {
+                    fetchFromMetaAPI(currencyPair, updateEntryPrice);
+                } else if (selectedApi === 'currencyfreaks') {
                     fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
                 } else {
                     fetchFromFxRates(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
                 }
+            }
+
+            // Fetch from MetaAPI
+            async function fetchFromMetaAPI(currencyPair, updateEntryPrice) {
+                if (!metaAPIConnected) {
+                    logger.logError('FETCH_METAAPI_NOT_CONNECTED', 'MetaAPI not connected');
+                    $('#metaapi-status').removeClass('alert-success').addClass('alert-warning');
+                    $('#metaapi-status-text').text('Please connect to MetaAPI first');
+                    useFallbackRate(currencyPair, updateEntryPrice);
+                    return;
+                }
+                
+                logger.logApi('FETCH_METAAPI_REQUEST', { currencyPair });
+                
+                try {
+                    // Get real-time price from MetaAPI
+                    const priceData = await metaAPIService.getPrice(currencyPair);
+                    
+                    // Use mid price (average of bid and ask)
+                    const rate = (priceData.bid + priceData.ask) / 2;
+                    
+                    logger.logApi('FETCH_METAAPI_RESPONSE', { currencyPair }, { 
+                        bid: priceData.bid, 
+                        ask: priceData.ask, 
+                        rate, 
+                        spread: priceData.spread 
+                    });
+                    
+                    // Store rate
+                    forexRates[currencyPair] = rate;
+                    lastUpdateTime = new Date(priceData.time);
+                    
+                    // Display rate with spread information
+                    displayMetaAPIRate(priceData, currencyPair, updateEntryPrice);
+                    
+                } catch (error) {
+                    logger.logError('FETCH_METAAPI_ERROR', error.message, { currencyPair });
+                    
+                    // Fall back to other APIs
+                    const baseCurrency = currencyPair.substring(0, 3);
+                    const quoteCurrency = currencyPair.substring(3, 6);
+                    fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
+                }
+            }
+
+            // Display MetaAPI rate with bid/ask spread
+            function displayMetaAPIRate(priceData, currencyPair, updateEntryPrice = false) {
+                const rate = (priceData.bid + priceData.ask) / 2;
+                const formatted = formatRate(rate, currencyPair);
+                const bidFormatted = formatRate(priceData.bid, currencyPair);
+                const askFormatted = formatRate(priceData.ask, currencyPair);
+                const spreadPips = ((priceData.ask - priceData.bid) / Math.pow(10, -getPipDecimalPlaces(currencyPair))).toFixed(1);
+                
+                $('#current-rate').html(`
+                    <div>${formatted} <small class="text-muted">(Mid)</small></div>
+                    <div style="font-size: 0.8em; color: #666;">
+                        Bid: ${bidFormatted} | Ask: ${askFormatted} | Spread: ${spreadPips} pips
+                    </div>
+                `);
+                
+                logger.logCalculation('DISPLAY_METAAPI_RATE', { 
+                    rate, currencyPair, formatted, bidFormatted, askFormatted, spreadPips, updateEntryPrice 
+                });
+                
+                const timeString = lastUpdateTime.toLocaleTimeString() + ' ' + lastUpdateTime.toLocaleDateString();
+                $('#timestamp').text(timeString + ' (Real-time)');
+                $('#api-update-time').text(timeString);
+                hideManualDataSection(); // Hide manual section when MetaAPI works
+                
+                // Update entry price field if requested and no manual entry has been made
+                if (updateEntryPrice && !$('#entry-price').val()) {
+                    $('#entry-price').val(formatted);
+                    logger.logCalculation('ENTRY_PRICE_UPDATED_FROM_METAAPI_RATE', { newEntryPrice: formatted });
+                }
+                
+                // Recalculate stop loss/take profit values if they depend on entry price
+                updateDependentValues();
             }
             
             // Fetch from CurrencyFreaks API
