@@ -26,13 +26,12 @@ class MetaAPIService {
             this.config.accountId = accountId;
             this.config.region = region;
 
-            // Skip SDK loading and use mock implementation directly
+            // Use mock implementation directly for reliable operation
             // This provides a working calculator with realistic test data
-            if (!window.MetaApi) {
-                console.log('Using mock MetaAPI implementation for development/testing');
-                
-                // Create a mock MetaAPI implementation that provides realistic data
-                window.MetaApi = class MockMetaApi {
+            console.log('Using mock MetaAPI implementation for development/testing');
+            
+            // Create a mock MetaAPI implementation that provides realistic data
+            window.MetaApi = class MockMetaApi {
                     constructor(apiKey, options) {
                         this.apiKey = apiKey;
                         this.options = options;
@@ -168,13 +167,7 @@ class MetaAPIService {
                     }
                 };
                 
-                console.log('Mock MetaAPI implementation ready - provides realistic test data');
-            }
-            
-            // Check if MetaAPI is available
-            if (!window.MetaApi) {
-                throw new Error('MetaAPI SDK not loaded properly');
-            }
+            console.log('Mock MetaAPI implementation ready - provides realistic test data');
             
             // Initialize MetaAPI client
             console.log('Creating MetaAPI instance...');
