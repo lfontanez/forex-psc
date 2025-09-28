@@ -374,9 +374,7 @@
                 <div class="api-selector">
                     <label class="form-label">Rates Data Source:</label>
                     <div>
-                        <span class="api-option" data-api="metaapi">MetaAPI (Real-time)</span>
-                        <span class="api-option active" data-api="currencyfreaks">CurrencyFreaks API</span>
-                        <span class="api-option" data-api="fxrates">FX Rates API</span>
+                        <span class="api-option active" data-api="metaapi">MetaAPI (Real-time)</span>
                     </div>
                 </div>
 
@@ -501,7 +499,7 @@
                             <div class="timestamp" id="timestamp">Loading...</div>
                         </div>
                     </div>
-                    <div class="api-credits" id="api-source">Exchange rates provided by CurrencyFreaks API</div>
+                    <div class="api-credits" id="api-source">Exchange rates provided by MetaAPI (Real-time)</div>
                 </div>
 
                 <div class="row mb-3">
@@ -773,7 +771,7 @@
 
         <div class="disclaimer">
             <p><strong>HIGH RISK WARNING:</strong> Foreign exchange trading carries a high level of risk that may not be suitable for all investors. Leverage creates additional risk and loss exposure. Before you decide to trade foreign exchange, carefully consider your investment objectives, experience level, and risk tolerance. You could lose some or all of your initial investment. Do not invest money that you cannot afford to lose.</p>
-            <p>Exchange rates are provided by <span id="api-name-footer">CurrencyFreaks API</span>. Last updated: <span id="api-update-time">-</span></p>
+            <p>Exchange rates are provided by <span id="api-name-footer">MetaAPI (Real-time)</span>. Last updated: <span id="api-update-time">-</span></p>
         </div>
     </div>
 
@@ -889,14 +887,8 @@
                 }
             });
             
-            // API keys (you should replace these with your own keys)
-            const API_KEYS = {
-                currencyfreaks: 'YOUR_CURRENCYFREAKS_API_KEY',
-                fxrates: 'YOUR_FXRATES_API_KEY'
-            };
-            
             // Selected API
-            let selectedApi = 'currencyfreaks';
+            let selectedApi = 'metaapi';
             
             // MetaAPI connection status
             let metaAPIConnected = false;
@@ -1291,22 +1283,11 @@
                 
                 logger.logApi('API_CHANGED', { newApi: selectedApi });
                 
-                // Show/hide MetaAPI configuration
-                if (selectedApi === 'metaapi') {
-                    $('#metaapi-config').show();
-                } else {
-                    $('#metaapi-config').hide();
-                }
+                // Show MetaAPI configuration (always visible now)
+                $('#metaapi-config').show();
                 
                 // Update API source text
-                let apiName;
-                if (selectedApi === 'metaapi') {
-                    apiName = 'MetaAPI (Real-time)';
-                } else if (selectedApi === 'currencyfreaks') {
-                    apiName = 'CurrencyFreaks API';
-                } else {
-                    apiName = 'FX Rates API';
-                }
+                const apiName = 'MetaAPI (Real-time)';
                 $('#api-source').text(`Exchange rates provided by ${apiName}`);
                 $('#api-name-footer').text(apiName);
                 
@@ -1780,18 +1761,8 @@
                 
                 logger.logApi('FETCH_FOREX_RATE_STARTED', { currencyPair, updateEntryPrice, selectedApi });
                 
-                // Extract base and quote currencies
-                const baseCurrency = currencyPair.substring(0, 3);
-                const quoteCurrency = currencyPair.substring(3, 6);
-                
-                // Determine which API to use
-                if (selectedApi === 'metaapi') {
-                    fetchFromMetaAPI(currencyPair, updateEntryPrice);
-                } else if (selectedApi === 'currencyfreaks') {
-                    fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
-                } else {
-                    fetchFromFxRates(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
-                }
+                // Use MetaAPI as primary source
+                fetchFromMetaAPI(currencyPair, updateEntryPrice);
             }
 
             // Fetch from MetaAPI
@@ -1830,10 +1801,8 @@
                 } catch (error) {
                     logger.logError('FETCH_METAAPI_ERROR', error.message, { currencyPair });
                     
-                    // Fall back to other APIs
-                    const baseCurrency = currencyPair.substring(0, 3);
-                    const quoteCurrency = currencyPair.substring(3, 6);
-                    fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
+                    // Fall back to fallback rates or manual entry
+                    useFallbackRate(currencyPair, updateEntryPrice);
                 }
             }
 
@@ -1871,116 +1840,6 @@
                 updateDependentValues();
             }
             
-            // Fetch from CurrencyFreaks API
-            function fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice) {
-                // Create URL for API request - using CurrencyFreaks latest rates endpoint
-                const url = `https://api.currencyfreaks.com/v2.0/rates/latest?apikey=${API_KEYS.currencyfreaks}&symbols=${baseCurrency},${quoteCurrency}`;
-                
-                logger.logApi('FETCH_CURRENCYFREAKS_REQUEST', { url, baseCurrency, quoteCurrency });
-                
-                // Fetch data from API
-                fetch(url)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        logger.logApi('FETCH_CURRENCYFREAKS_RESPONSE', { baseCurrency, quoteCurrency }, data);
-                        
-                        if (data && data.rates) {
-                            // Calculate the exchange rate
-                            // If the base currency is USD (base in API response)
-                            let rate;
-                            if (baseCurrency === 'USD') {
-                                rate = data.rates[quoteCurrency];
-                            } else if (quoteCurrency === 'USD') {
-                                rate = 1 / parseFloat(data.rates[baseCurrency]);
-                            } else {
-                                // Cross rate calculation
-                                const baseToUsd = parseFloat(data.rates[baseCurrency]);
-                                const quoteToUsd = parseFloat(data.rates[quoteCurrency]);
-                                rate = quoteToUsd / baseToUsd;
-                            }
-                            
-                            logger.logCalculation('FETCH_CURRENCYFREAKS_RATE_CALCULATED', 
-                                { baseCurrency, quoteCurrency, baseToUsd: data.rates[baseCurrency], quoteToUsd: data.rates[quoteCurrency] },
-                                { rate }
-                            );
-                            
-                            // Store rate
-                            forexRates[currencyPair] = rate;
-                            lastUpdateTime = new Date();
-                            
-                            // Display rate
-                            displayRate(rate, currencyPair, updateEntryPrice);
-                        } else {
-                            throw new Error('Invalid API response');
-                        }
-                    })
-                    .catch(error => {
-                        logger.logError('FETCH_CURRENCYFREAKS_ERROR', error.message, { baseCurrency, quoteCurrency });
-                        
-                        // Try FX Rates API as a fallback if it's not already selected
-                        if (selectedApi !== 'fxrates') {
-                            logger.logApi('FETCH_CURRENCYFREAKS_FALLBACK_TO_FXRATES', { baseCurrency, quoteCurrency });
-                            fetchFromFxRates(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
-                        } else {
-                            useFallbackRate(currencyPair, updateEntryPrice);
-                        }
-                    });
-            }
-            
-            // Fetch from FX Rates API
-            function fetchFromFxRates(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice) {
-                // Create URL for API request
-                const url = `https://api.fxratesapi.com/latest?api_key=${API_KEYS.fxrates}&currencies=${quoteCurrency}&base=${baseCurrency}`;
-                
-                logger.logApi('FETCH_FXRATES_REQUEST', { url, baseCurrency, quoteCurrency });
-                
-                // Fetch data from API
-                fetch(url)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        logger.logApi('FETCH_FXRATES_RESPONSE', { baseCurrency, quoteCurrency }, data);
-                        
-                        if (data && data.rates) {
-                            // Get the rate directly from the response
-                            const rate = parseFloat(data.rates[quoteCurrency]);
-                            
-                            logger.logCalculation('FETCH_FXRATES_RATE_EXTRACTED', 
-                                { quoteCurrency },
-                                { rate }
-                            );
-                            
-                            // Store rate
-                            forexRates[currencyPair] = rate;
-                            lastUpdateTime = new Date();
-                            
-                            // Display rate
-                            displayRate(rate, currencyPair, updateEntryPrice);
-                        } else {
-                            throw new Error('Invalid API response');
-                        }
-                    })
-                    .catch(error => {
-                        logger.logError('FETCH_FXRATES_ERROR', error.message, { baseCurrency, quoteCurrency });
-                        
-                        // Try CurrencyFreaks API as a fallback if it's not already selected
-                        if (selectedApi !== 'currencyfreaks') {
-                            logger.logApi('FETCH_FXRATES_FALLBACK_TO_CURRENCYFREAKS', { baseCurrency, quoteCurrency });
-                            fetchFromCurrencyFreaks(baseCurrency, quoteCurrency, currencyPair, updateEntryPrice);
-                        } else {
-                            useFallbackRate(currencyPair, updateEntryPrice);
-                        }
-                    });
-            }
             
             // Use fallback rate when both APIs fail
             function useFallbackRate(currencyPair, updateEntryPrice) {
@@ -2422,6 +2281,9 @@
                 }
             }
 
+            // Show MetaAPI configuration by default
+            $('#metaapi-config').show();
+            
             // Initialize with default selections
             if ($('#currency-pair').val()) {
                 fetchForexRate($('#currency-pair').val(), true);
@@ -2430,6 +2292,9 @@
             
             // Log initial timeframe
             logger.logCalculation('INITIAL_TIMEFRAME_SET', { timeframe: globalTimeframe });
+            
+            // Initialize MetaAPI status
+            logger.logApi('METAAPI_INITIALIZATION', { status: 'Ready for connection' });
         });
     </script>
 
