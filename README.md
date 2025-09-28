@@ -38,6 +38,9 @@ A professional web-based calculator that helps traders determine optimal positio
 
 ### Required Credentials
 
+You can configure MetaAPI credentials in several ways:
+
+#### Method 1: Environment Variables (Recommended)
 Create a `.env` file based on `.env-example`:
 
 ```env
@@ -45,6 +48,22 @@ METAAPI_API_KEY=your_api_key_here
 METAAPI_ACCOUNT_ID=your_account_id_here
 METAAPI_REGION=new-york
 ```
+
+#### Method 2: Config File
+Create a `config.json` file with your credentials:
+
+```json
+{
+  "METAAPI_API_KEY": "your_api_key_here",
+  "METAAPI_ACCOUNT_ID": "your_account_id_here",
+  "METAAPI_REGION": "new-york"
+}
+```
+
+#### Method 3: Manual Entry
+Enter credentials directly in the web interface when connecting.
+
+**Note**: The application will automatically try to load credentials from environment variables or config files first, then fall back to manual entry.
 
 ### Supported Regions
 - `new-york` (default)
