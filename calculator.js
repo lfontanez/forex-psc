@@ -169,7 +169,7 @@ class MetaAPIService {
                 
             console.log('Mock MetaAPI implementation ready - provides realistic test data');
             
-            // Initialize mock MetaAPI client
+            // Initialize MetaAPI client
             console.log('Creating MetaAPI instance...');
             const api = new window.MetaApi(apiKey, { region });
             this.client = api;
@@ -192,7 +192,7 @@ class MetaAPIService {
             await this.connection.waitSynchronized();
             
             this.isConnected = true;
-            console.log('MetaAPI (Mock) connected successfully');
+            console.log('MetaAPI connected successfully');
             return true;
             
         } catch (error) {
@@ -202,152 +202,64 @@ class MetaAPIService {
         }
     }
 
-    // Create comprehensive mock MetaAPI implementation
-    createMockMetaAPI() {
-        const self = this;
-        
-        window.MetaApi = class MockMetaApi {
-            constructor(apiKey, options = {}) {
-                this.apiKey = apiKey;
-                this.options = options;
-                console.log('Mock MetaAPI initialized with region:', options?.region || 'new-york');
-                
-                this.metatraderAccountApi = {
-                    getAccount: async (accountId) => {
-                        console.log('Mock: Getting account', accountId);
-                        
-                        const mockAccount = {
-                            waitDeployed: async () => {
-                                console.log('Mock: Account deployment complete');
-                                // Simulate deployment time
-                                await new Promise(resolve => setTimeout(resolve, 500));
-                                return true;
-                            },
-                            getRPCConnection: () => {
-                                return {
-                                    connect: async () => {
-                                        console.log('Mock: RPC connection established');
-                                        await new Promise(resolve => setTimeout(resolve, 300));
-                                        return true;
-                                    },
-                                    waitSynchronized: async () => {
-                                        console.log('Mock: Connection synchronized');
-                                        await new Promise(resolve => setTimeout(resolve, 200));
-                                        return true;
-                                    },
-                                    getSymbolPrice: async (symbol) => {
-                                        return self.generateMockPrice(symbol);
-                                    },
-                                    getCandles: async (symbol, timeframe, startTime, limit) => {
-                                        return self.generateMockCandles(symbol, timeframe, startTime, limit);
-                                    },
-                                    close: async () => {
-                                        console.log('Mock: Connection closed');
-                                        return true;
-                                    }
-                                };
-                            }
-                        };
-                        
-                        return mockAccount;
-                    }
-                };
+    // Load MetaAPI SDK from various sources
+    async loadMetaAPISDK() {
+        // Check if already loaded
+        if (window.MetaApi) {
+            console.log('MetaAPI SDK already loaded');
+            return;
+        }
+
+        const cdnUrls = [
+            // Try local copy first (from npm install)
+            './lib/metaApi.es6.js',
+            './lib/metaapi.min.js',
+            './node_modules/metaapi.cloud-sdk/index.js',
+            './node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js',
+            
+            // Try CDN sources as fallback
+            'https://unpkg.com/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js',
+            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js',
+            'https://unpkg.com/metaapi.cloud-sdk/lib/metaApi.es6.js'
+        ];
+
+        for (const url of cdnUrls) {
+            console.log('Trying to load MetaAPI from:', url);
+            try {
+                await this.loadScript(url);
+                if (window.MetaApi) {
+                    console.log('MetaAPI SDK loaded successfully from:', url);
+                    return;
+                }
+            } catch (error) {
+                console.log(`Failed to load from ${url}:`, error.message);
+                continue;
             }
-        };
+        }
+
+        throw new Error('Failed to load MetaAPI SDK from all sources. Please check your internet connection and try again.');
     }
 
-    // Generate realistic mock price data
-    generateMockPrice(symbol) {
-        console.log('Mock: Getting price for', symbol);
-        
-        const basePrices = {
-            'EURUSD': { bid: 1.08450, ask: 1.08453 },
-            'GBPUSD': { bid: 1.26710, ask: 1.26713 },
-            'USDJPY': { bid: 149.870, ask: 149.872 },
-            'AUDUSD': { bid: 0.65898, ask: 0.65900 },
-            'USDCAD': { bid: 1.36932, ask: 1.36934 },
-            'USDCHF': { bid: 0.88156, ask: 0.88158 },
-            'NZDUSD': { bid: 0.59418, ask: 0.59420 },
-            'EURJPY': { bid: 162.548, ask: 162.550 },
-            'GBPJPY': { bid: 189.945, ask: 189.947 },
-            'EURGBP': { bid: 0.85588, ask: 0.85590 },
-            'AUDJPY': { bid: 98.736, ask: 98.738 },
-            'EURAUD': { bid: 1.64600, ask: 1.64602 },
-            'GBPAUD': { bid: 1.92330, ask: 1.92332 },
-            'XAUUSD': { bid: 2658.50, ask: 2659.00 }
-        };
-        
-        const basePrice = basePrices[symbol];
-        if (!basePrice) {
-            throw new Error(`Unsupported symbol: ${symbol}`);
-        }
-        
-        // Add small random variation (±0.1% for realism)
-        const variation = (Math.random() - 0.5) * 0.002;
-        const bid = Math.max(0, basePrice.bid * (1 + variation));
-        const ask = Math.max(bid + 0.00001, basePrice.ask * (1 + variation));
-        
-        return {
-            bid: parseFloat(bid.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
-            ask: parseFloat(ask.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
-            time: new Date(),
-            spread: ask - bid
-        };
-    }
-
-    // Generate realistic mock candle data for ATR calculation
-    generateMockCandles(symbol, timeframe, startTime, limit) {
-        console.log('Mock: Getting candles for', symbol, timeframe, 'limit:', limit);
-        
-        const candles = [];
-        const basePrices = {
-            'EURUSD': 1.0845,
-            'GBPUSD': 1.2671,
-            'USDJPY': 149.87,
-            'AUDUSD': 0.6590,
-            'USDCAD': 1.3693,
-            'USDCHF': 0.8816,
-            'NZDUSD': 0.5942,
-            'EURJPY': 162.55,
-            'GBPJPY': 189.95,
-            'EURGBP': 0.8559,
-            'AUDJPY': 98.74,
-            'EURAUD': 1.6460,
-            'GBPAUD': 1.9233,
-            'XAUUSD': 2658.75
-        };
-        
-        const basePrice = basePrices[symbol] || 1.0000;
-        const timeframeMs = this.getTimeframeMilliseconds(timeframe);
-        
-        // Generate realistic candle data
-        for (let i = 0; i < limit; i++) {
-            // Create realistic price movements
-            const trendVariation = (Math.random() - 0.5) * 0.01;
-            const volatility = symbol.includes('JPY') ? 0.5 : 
-                             symbol === 'XAUUSD' ? 15.0 : 0.005;
+    // Load script dynamically
+    loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load script from ${src}`));
             
-            const open = Math.max(0.00001, basePrice + (trendVariation * i * 0.1));
-            const closeVariation = (Math.random() - 0.5) * volatility;
-            const close = Math.max(0.00001, open + closeVariation);
+            // Set timeout for loading
+            const timeout = setTimeout(() => {
+                reject(new Error(`Timeout loading script from ${src}`));
+            }, 10000);
             
-            const highVariation = Math.random() * volatility * 0.5;
-            const lowVariation = Math.random() * volatility * 0.5;
+            script.onload = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
             
-            const high = Math.max(open, close) + highVariation;
-            const low = Math.max(0.00001, Math.min(open, close) - lowVariation);
-            
-            candles.push({
-                time: new Date(Date.now() - i * timeframeMs),
-                open: parseFloat(open.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
-                high: parseFloat(high.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
-                low: parseFloat(low.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
-                close: parseFloat(close.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
-                tickVolume: Math.floor(Math.random() * 1000) + 100
-            });
-        }
-        
-        return candles.reverse(); // Return in chronological order
+            document.head.appendChild(script);
+        });
     }
 
     // Get real-time price for a symbol
@@ -362,7 +274,7 @@ class MetaAPIService {
                 symbol: symbol,
                 bid: price.bid,
                 ask: price.ask,
-                time: price.time,
+                time: price.time || new Date(),
                 spread: price.ask - price.bid
             };
         } catch (error) {
@@ -378,7 +290,10 @@ class MetaAPIService {
         }
 
         try {
-            const candles = await this.connection.getCandles(symbol, timeframe, startTime, limit);
+            // Convert timeframe to MetaAPI format
+            const mtTimeframe = this.convertTimeframe(timeframe);
+            
+            const candles = await this.connection.getCandles(symbol, mtTimeframe, startTime, limit);
             return candles.map(candle => ({
                 time: candle.time,
                 open: candle.open,
@@ -391,6 +306,21 @@ class MetaAPIService {
             console.error(`Failed to get historical data for ${symbol}:`, error);
             throw error;
         }
+    }
+
+    // Convert timeframe to MetaAPI format
+    convertTimeframe(timeframe) {
+        const timeframeMap = {
+            '1m': '1m',
+            '5m': '5m',
+            '15m': '15m',
+            '30m': '30m',
+            '1h': '1h',
+            '4h': '4h',
+            '8h': '8h',
+            '1d': '1d'
+        };
+        return timeframeMap[timeframe] || '1h';
     }
 
     // Calculate ATR from historical data
@@ -429,10 +359,15 @@ class MetaAPIService {
         try {
             // Calculate start time (need extra candles for ATR calculation)
             const now = new Date();
-            const startTime = new Date(now.getTime() - (periods + 10) * this.getTimeframeMilliseconds(timeframe));
+            const candlesNeeded = periods + 10; // Extra buffer for calculation
+            const startTime = new Date(now.getTime() - candlesNeeded * this.getTimeframeMilliseconds(timeframe));
             
             // Get historical data
-            const candles = await this.getHistoricalData(symbol, timeframe, startTime, periods + 10);
+            const candles = await this.getHistoricalData(symbol, timeframe, startTime, candlesNeeded);
+            
+            if (candles.length < periods + 1) {
+                throw new Error(`Insufficient historical data. Got ${candles.length} candles, need at least ${periods + 1}`);
+            }
             
             // Calculate and return ATR
             const atr = this.calculateATR(candles, periods);
