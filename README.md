@@ -23,7 +23,7 @@ A professional web-based calculator that helps traders determine optimal positio
 ## Quick Start
 
 1. **Clone or download** the project files
-2. **Install dependencies**: `npm install`
+2. **Install dependencies and build**: `npm run install-deps`
 3. **Get MetaAPI credentials**:
    - Sign up at [MetaAPI.cloud](https://metaapi.cloud)
    - Create a MetaTrader account connection
@@ -140,13 +140,20 @@ Major pairs, crosses, and commodities:
 
 ### Local Development
 ```bash
-npm install
-npm run dev
+npm run install-deps  # Install dependencies and build SDK
+npm run dev           # Start development server
 ```
 
 ### Production Deployment
 ```bash
-npm run start
+npm run install-deps  # Install dependencies and build SDK
+npm run start         # Start production server
+```
+
+### Manual Build (if needed)
+```bash
+npm install           # Install dependencies
+npm run build         # Copy SDK files to lib directory
 ```
 
 ### Project Structure

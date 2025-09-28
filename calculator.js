@@ -26,50 +26,44 @@ class MetaAPIService {
             this.config.accountId = accountId;
             this.config.region = region;
 
-            // Import MetaAPI using ES6 modules for browser compatibility
+            // Import MetaAPI from locally installed SDK
             if (!window.MetaApi) {
-                console.log('Loading MetaAPI SDK...');
+                console.log('Loading MetaAPI SDK from local installation...');
                 
                 try {
-                    // Use dynamic import for ES6 modules
-                    const metaApiModule = await import('https://unpkg.com/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js');
-                    window.MetaApi = metaApiModule.MetaApi;
-                    console.log('MetaAPI SDK loaded successfully via ES6 import');
+                    // Try to import from copied lib directory first
+                    const metaApiModule = await import('./lib/metaApi.es6.js');
+                    window.MetaApi = metaApiModule.MetaApi || metaApiModule.default?.MetaApi || metaApiModule.default;
+                    console.log('MetaAPI SDK loaded successfully from local lib directory');
                 } catch (error) {
-                    console.warn('ES6 import failed, trying alternative method:', error.message);
+                    console.warn('Local lib import failed, trying alternative paths:', error.message);
                     
-                    // Fallback: Try to load the UMD build
-                    try {
-                        const script = document.createElement('script');
-                        script.src = 'https://unpkg.com/metaapi.cloud-sdk@29.3.1/lib/metaApi.js';
-                        script.type = 'text/javascript';
-                        document.head.appendChild(script);
-                        
-                        // Wait for script to load
-                        await new Promise((resolve, reject) => {
-                            const timeout = setTimeout(() => {
-                                reject(new Error('MetaAPI SDK loading timeout'));
-                            }, 15000); // 15 second timeout
-                            
-                            script.onload = () => {
-                                clearTimeout(timeout);
-                                // The UMD build should expose MetaApi globally
-                                if (window.MetaApi || window.metaapi?.MetaApi) {
-                                    window.MetaApi = window.MetaApi || window.metaapi.MetaApi;
-                                    resolve();
-                                } else {
-                                    reject(new Error('MetaAPI not found after loading UMD build'));
-                                }
-                            };
-                            script.onerror = (error) => {
-                                clearTimeout(timeout);
-                                reject(new Error('Failed to load MetaAPI UMD build'));
-                            };
-                        });
-                        
-                        console.log('MetaAPI SDK loaded successfully via UMD build');
-                    } catch (umdError) {
-                        console.warn('UMD build failed, using mock implementation:', umdError.message);
+                    // Fallback: Try different import paths
+                    const importPaths = [
+                        './node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js',
+                        './node_modules/metaapi.cloud-sdk/index.js',
+                        './node_modules/metaapi.cloud-sdk/lib/metaApi.js'
+                    ];
+                    
+                    let loaded = false;
+                    for (const path of importPaths) {
+                        try {
+                            console.log(`Trying to load MetaAPI from: ${path}`);
+                            const module = await import(path);
+                            window.MetaApi = module.MetaApi || module.default?.MetaApi || module.default;
+                            if (window.MetaApi) {
+                                console.log(`MetaAPI SDK loaded successfully from: ${path}`);
+                                loaded = true;
+                                break;
+                            }
+                        } catch (pathError) {
+                            console.warn(`Failed to load from ${path}:`, pathError.message);
+                            continue;
+                        }
+                    }
+                    
+                    if (!loaded) {
+                        console.warn('All local import attempts failed, using mock implementation');
                         
                         // Create a mock MetaAPI implementation for development/testing
                         window.MetaApi = class MockMetaApi {

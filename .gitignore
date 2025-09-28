@@ -5,6 +5,7 @@ config.json
 .DS_Store
 Thumbs.db
 node_modules
+lib/
 dist
 build
 *.log
