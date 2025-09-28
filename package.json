@@ -1,28 +1,48 @@
 {
   "name": "forex-position-calculator",
-  "version": "1.0.0",
-  "description": "Forex Position Size Calculator with MetaAPI Integration",
+  "version": "2.0.0",
+  "description": "Professional Forex Position Size Calculator with Real-time MetaAPI Integration",
   "main": "index.html",
   "scripts": {
     "start": "npx http-server . -p 3000",
     "dev": "npx http-server . -p 3000 -o",
-    "install-deps": "npm install"
+    "install-deps": "npm install",
+    "test": "echo \"No tests specified\" && exit 0",
+    "lint": "echo \"No linting configured\" && exit 0"
   },
   "dependencies": {
-    "bootstrap": "^5.3.0-alpha1",
-    "jquery": "^3.6.0",
     "metaapi.cloud-sdk": "^29.3.1"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
+  },
+  "peerDependencies": {
+    "bootstrap": "^5.3.0",
+    "jquery": "^3.6.0"
   },
   "keywords": [
     "forex",
     "trading",
     "position-sizing",
     "metaapi",
-    "risk-management"
+    "risk-management",
+    "real-time",
+    "atr",
+    "trading-calculator",
+    "financial-tools"
   ],
   "author": "Forex Calculator Team",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/forex-position-calculator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/forex-position-calculator/issues"
+  },
+  "homepage": "https://github.com/your-username/forex-position-calculator#readme",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
 }
