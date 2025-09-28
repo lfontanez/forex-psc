@@ -4,8 +4,8 @@
   "description": "Professional Forex Position Size Calculator with Real-time MetaAPI Integration",
   "main": "index.html",
   "scripts": {
-    "start": "npx http-server . -p 3000",
-    "dev": "npx http-server . -p 3000 -o",
+    "start": "npx http-server . -p 3080",
+    "dev": "npx http-server . -p 3080 -o",
     "install-deps": "npm install",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "echo \"No linting configured\" && exit 0"
