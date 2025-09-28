@@ -887,7 +887,7 @@
                 }
             });
             
-            // Selected API
+            // Selected API (MetaAPI only)
             let selectedApi = 'metaapi';
             
             // MetaAPI connection status
@@ -962,7 +962,7 @@
                 "XAUUSD": 2450.00
             };
 
-            // Conversion rates to USD (fallback)
+            // Conversion rates to USD (fallback when MetaAPI unavailable)
             const usdConversionRates = {
                 "USD": 1.0,
                 "EUR": 1.15403,
@@ -1042,15 +1042,15 @@
                 }
             });
             
-            // Function to fetch ATR from API
+            // Function to fetch ATR from MetaAPI
             async function fetchATR(currencyPair, timeframe, periods = '14') {
                 // Log the request
-                logger.logApi('FETCH_ATR_REQUEST', { currencyPair, timeframe, periods, selectedApi });
+                logger.logApi('FETCH_ATR_REQUEST', { currencyPair, timeframe, periods });
                 
                 let atrValue;
                 
-                // Try MetaAPI first if connected
-                if (selectedApi === 'metaapi' && metaAPIConnected) {
+                // Try MetaAPI if connected
+                if (metaAPIConnected) {
                     try {
                         logger.logApi('FETCH_ATR_METAAPI_ATTEMPT', { currencyPair, timeframe, periods });
                         
@@ -1069,7 +1069,7 @@
                         atrValue = getSimulatedATR(currencyPair, timeframe, periods);
                     }
                 } else {
-                    // Use simulated ATR for other APIs
+                    // Use simulated ATR when MetaAPI not connected
                     atrValue = getSimulatedATR(currencyPair, timeframe, periods);
                 }
                 
@@ -1275,7 +1275,7 @@
                 }
             });
 
-            // API selector
+            // API selector (MetaAPI only - simplified)
             $('.api-option').click(function() {
                 $('.api-option').removeClass('active');
                 $(this).addClass('active');
@@ -1283,18 +1283,12 @@
                 
                 logger.logApi('API_CHANGED', { newApi: selectedApi });
                 
-                // Show MetaAPI configuration (always visible now)
+                // MetaAPI configuration is always visible
                 $('#metaapi-config').show();
-                
-                // Update API source text
-                const apiName = 'MetaAPI (Real-time)';
-                $('#api-source').text(`Exchange rates provided by ${apiName}`);
-                $('#api-name-footer').text(apiName);
                 
                 // Refetch currency pair rates if one is selected
                 const currencyPair = $('#currency-pair').val();
                 if (currencyPair) {
-                    // Save entry price to check if we need to update it
                     const oldEntryPrice = $('#entry-price').val();
                     const useCurrentRateForEntry = !oldEntryPrice;
                     
@@ -1304,9 +1298,15 @@
 
             // MetaAPI Connect button
             $('#metaapi-connect-btn').click(async function() {
-                const apiKey = $('#metaapi-key').val().trim();
-                const accountId = $('#metaapi-account').val().trim();
+                let apiKey = $('#metaapi-key').val().trim();
+                let accountId = $('#metaapi-account').val().trim();
                 const region = $('#metaapi-region').val();
+                
+                // Try to load from environment if fields are empty (for development)
+                if (!apiKey && typeof process !== 'undefined' && process.env) {
+                    apiKey = process.env.METAAPI_API_KEY;
+                    accountId = process.env.METAAPI_ACCOUNT_ID;
+                }
                 
                 if (!apiKey || !accountId) {
                     alert('Please enter both MetaAPI key and Account ID');
@@ -1753,19 +1753,19 @@
                 calculatePositionSize();
             });
 
-            // Function to fetch forex rate
+            // Function to fetch forex rate (MetaAPI only)
             function fetchForexRate(currencyPair, updateEntryPrice = false) {
                 $('#rate-display').show();
                 $('#current-rate').html('<div class="loading-spinner"></div>');
                 $('#timestamp').text('Fetching...');
                 
-                logger.logApi('FETCH_FOREX_RATE_STARTED', { currencyPair, updateEntryPrice, selectedApi });
+                logger.logApi('FETCH_FOREX_RATE_STARTED', { currencyPair, updateEntryPrice });
                 
-                // Use MetaAPI as primary source
+                // Use MetaAPI as primary and only source
                 fetchFromMetaAPI(currencyPair, updateEntryPrice);
             }
 
-            // Fetch from MetaAPI
+            // Fetch from MetaAPI (primary data source)
             async function fetchFromMetaAPI(currencyPair, updateEntryPrice) {
                 if (!metaAPIConnected) {
                     logger.logError('FETCH_METAAPI_NOT_CONNECTED', 'MetaAPI not connected');
