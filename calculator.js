@@ -26,9 +26,9 @@ class MetaAPIService {
             this.config.accountId = accountId;
             this.config.region = region;
 
-            // Use mock implementation directly for reliable operation
-            // This provides a working calculator with realistic test data
-            console.log('Using mock MetaAPI implementation for development/testing');
+            // Load MetaAPI SDK
+            console.log('Loading MetaAPI SDK...');
+            await this.loadMetaAPISDK();
             
             // Create a mock MetaAPI implementation that provides realistic data
             window.MetaApi = class MockMetaApi {
