@@ -1649,10 +1649,12 @@
                 if (fallbackRates[currencyPair]) {
                     logger.logApi('USING_FALLBACK_RATE', { currencyPair, rate: fallbackRates[currencyPair] });
                     displayRate(fallbackRates[currencyPair], currencyPair, updateEntryPrice, true);
+                    hideManualDataSection(); // Hide manual section if fallback works
                 } else {
                     logger.logError('FALLBACK_RATE_NOT_AVAILABLE', 'No fallback rate available for this pair', { currencyPair });
                     $('#current-rate').text('Rate unavailable');
                     $('#timestamp').text('Could not fetch rate');
+                    showManualDataSection(); // Show manual section when all APIs fail
                 }
             }
 
@@ -1669,6 +1671,7 @@
                     const timeString = lastUpdateTime.toLocaleTimeString() + ' ' + lastUpdateTime.toLocaleDateString();
                     $('#timestamp').text(timeString);
                     $('#api-update-time').text(timeString);
+                    hideManualDataSection(); // Hide manual section when API works
                 }
                 
                 // Update entry price field if requested and no manual entry has been made

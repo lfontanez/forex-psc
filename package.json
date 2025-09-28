@@ -1,8 +1,28 @@
 {
+  "name": "forex-position-calculator",
+  "version": "1.0.0",
+  "description": "Forex Position Size Calculator with MetaAPI Integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000",
+    "dev": "npx http-server . -p 3000 -o",
+    "install-deps": "npm install"
+  },
   "dependencies": {
     "bootstrap": "^5.3.0-alpha1",
     "jquery": "^3.6.0",
-    "metaapi.cloud-sdk": "^29.3.1",
-    "uv": "^1.4.0"
-  }
+    "metaapi.cloud-sdk": "^29.3.1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": [
+    "forex",
+    "trading",
+    "position-sizing",
+    "metaapi",
+    "risk-management"
+  ],
+  "author": "Forex Calculator Team",
+  "license": "MIT"
 }
