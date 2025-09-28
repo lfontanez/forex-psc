@@ -19,28 +19,48 @@ class MetaAPIService {
     // Initialize MetaAPI client (browser-compatible)
     async initialize(apiKey, accountId, region = 'new-york') {
         try {
+            console.log('Initializing MetaAPI with:', { accountId, region, hasApiKey: !!apiKey });
+            
             // Store configuration
             this.config.apiKey = apiKey;
             this.config.accountId = accountId;
             this.config.region = region;
 
-            // Import MetaAPI dynamically for browser compatibility
-            const { MetaApi } = await import('https://unpkg.com/metaapi.cloud-sdk@27.0.2/index.js');
+            // Import MetaAPI using CDN for browser compatibility
+            if (!window.MetaApi) {
+                console.log('Loading MetaAPI SDK...');
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/metaapi.cloud-sdk@29.3.1/lib/metaApi.min.js';
+                document.head.appendChild(script);
+                
+                // Wait for script to load
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                });
+                
+                console.log('MetaAPI SDK loaded');
+            }
             
             // Initialize MetaAPI client
-            const api = new MetaApi(apiKey, { region });
+            console.log('Creating MetaAPI instance...');
+            const api = new window.MetaApi(apiKey, { region });
             this.client = api;
             
+            console.log('Getting account...');
             // Get account
             this.account = await api.metatraderAccountApi.getAccount(accountId);
             
+            console.log('Waiting for account deployment...');
             // Wait for account to be deployed
             await this.account.waitDeployed();
             
+            console.log('Creating RPC connection...');
             // Create connection
             this.connection = this.account.getRPCConnection();
             await this.connection.connect();
             
+            console.log('Waiting for synchronization...');
             // Wait for connection to be established
             await this.connection.waitSynchronized();
             
