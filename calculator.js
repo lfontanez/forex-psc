@@ -169,7 +169,7 @@ class MetaAPIService {
                 
             console.log('Mock MetaAPI implementation ready - provides realistic test data');
             
-            // Initialize MetaAPI client
+            // Initialize mock MetaAPI client
             console.log('Creating MetaAPI instance...');
             const api = new window.MetaApi(apiKey, { region });
             this.client = api;
@@ -192,7 +192,7 @@ class MetaAPIService {
             await this.connection.waitSynchronized();
             
             this.isConnected = true;
-            console.log('MetaAPI connected successfully');
+            console.log('MetaAPI (Mock) connected successfully');
             return true;
             
         } catch (error) {
@@ -200,6 +200,154 @@ class MetaAPIService {
             this.isConnected = false;
             throw error;
         }
+    }
+
+    // Create comprehensive mock MetaAPI implementation
+    createMockMetaAPI() {
+        const self = this;
+        
+        window.MetaApi = class MockMetaApi {
+            constructor(apiKey, options = {}) {
+                this.apiKey = apiKey;
+                this.options = options;
+                console.log('Mock MetaAPI initialized with region:', options?.region || 'new-york');
+                
+                this.metatraderAccountApi = {
+                    getAccount: async (accountId) => {
+                        console.log('Mock: Getting account', accountId);
+                        
+                        const mockAccount = {
+                            waitDeployed: async () => {
+                                console.log('Mock: Account deployment complete');
+                                // Simulate deployment time
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                return true;
+                            },
+                            getRPCConnection: () => {
+                                return {
+                                    connect: async () => {
+                                        console.log('Mock: RPC connection established');
+                                        await new Promise(resolve => setTimeout(resolve, 300));
+                                        return true;
+                                    },
+                                    waitSynchronized: async () => {
+                                        console.log('Mock: Connection synchronized');
+                                        await new Promise(resolve => setTimeout(resolve, 200));
+                                        return true;
+                                    },
+                                    getSymbolPrice: async (symbol) => {
+                                        return self.generateMockPrice(symbol);
+                                    },
+                                    getCandles: async (symbol, timeframe, startTime, limit) => {
+                                        return self.generateMockCandles(symbol, timeframe, startTime, limit);
+                                    },
+                                    close: async () => {
+                                        console.log('Mock: Connection closed');
+                                        return true;
+                                    }
+                                };
+                            }
+                        };
+                        
+                        return mockAccount;
+                    }
+                };
+            }
+        };
+    }
+
+    // Generate realistic mock price data
+    generateMockPrice(symbol) {
+        console.log('Mock: Getting price for', symbol);
+        
+        const basePrices = {
+            'EURUSD': { bid: 1.08450, ask: 1.08453 },
+            'GBPUSD': { bid: 1.26710, ask: 1.26713 },
+            'USDJPY': { bid: 149.870, ask: 149.872 },
+            'AUDUSD': { bid: 0.65898, ask: 0.65900 },
+            'USDCAD': { bid: 1.36932, ask: 1.36934 },
+            'USDCHF': { bid: 0.88156, ask: 0.88158 },
+            'NZDUSD': { bid: 0.59418, ask: 0.59420 },
+            'EURJPY': { bid: 162.548, ask: 162.550 },
+            'GBPJPY': { bid: 189.945, ask: 189.947 },
+            'EURGBP': { bid: 0.85588, ask: 0.85590 },
+            'AUDJPY': { bid: 98.736, ask: 98.738 },
+            'EURAUD': { bid: 1.64600, ask: 1.64602 },
+            'GBPAUD': { bid: 1.92330, ask: 1.92332 },
+            'XAUUSD': { bid: 2658.50, ask: 2659.00 }
+        };
+        
+        const basePrice = basePrices[symbol];
+        if (!basePrice) {
+            throw new Error(`Unsupported symbol: ${symbol}`);
+        }
+        
+        // Add small random variation (±0.1% for realism)
+        const variation = (Math.random() - 0.5) * 0.002;
+        const bid = Math.max(0, basePrice.bid * (1 + variation));
+        const ask = Math.max(bid + 0.00001, basePrice.ask * (1 + variation));
+        
+        return {
+            bid: parseFloat(bid.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
+            ask: parseFloat(ask.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
+            time: new Date(),
+            spread: ask - bid
+        };
+    }
+
+    // Generate realistic mock candle data for ATR calculation
+    generateMockCandles(symbol, timeframe, startTime, limit) {
+        console.log('Mock: Getting candles for', symbol, timeframe, 'limit:', limit);
+        
+        const candles = [];
+        const basePrices = {
+            'EURUSD': 1.0845,
+            'GBPUSD': 1.2671,
+            'USDJPY': 149.87,
+            'AUDUSD': 0.6590,
+            'USDCAD': 1.3693,
+            'USDCHF': 0.8816,
+            'NZDUSD': 0.5942,
+            'EURJPY': 162.55,
+            'GBPJPY': 189.95,
+            'EURGBP': 0.8559,
+            'AUDJPY': 98.74,
+            'EURAUD': 1.6460,
+            'GBPAUD': 1.9233,
+            'XAUUSD': 2658.75
+        };
+        
+        const basePrice = basePrices[symbol] || 1.0000;
+        const timeframeMs = this.getTimeframeMilliseconds(timeframe);
+        
+        // Generate realistic candle data
+        for (let i = 0; i < limit; i++) {
+            // Create realistic price movements
+            const trendVariation = (Math.random() - 0.5) * 0.01;
+            const volatility = symbol.includes('JPY') ? 0.5 : 
+                             symbol === 'XAUUSD' ? 15.0 : 0.005;
+            
+            const open = Math.max(0.00001, basePrice + (trendVariation * i * 0.1));
+            const closeVariation = (Math.random() - 0.5) * volatility;
+            const close = Math.max(0.00001, open + closeVariation);
+            
+            const highVariation = Math.random() * volatility * 0.5;
+            const lowVariation = Math.random() * volatility * 0.5;
+            
+            const high = Math.max(open, close) + highVariation;
+            const low = Math.max(0.00001, Math.min(open, close) - lowVariation);
+            
+            candles.push({
+                time: new Date(Date.now() - i * timeframeMs),
+                open: parseFloat(open.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
+                high: parseFloat(high.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
+                low: parseFloat(low.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
+                close: parseFloat(close.toFixed(symbol.includes('JPY') ? 3 : symbol === 'XAUUSD' ? 2 : 5)),
+                tickVolume: Math.floor(Math.random() * 1000) + 100
+            });
+        }
+        
+        return candles.reverse(); // Return in chronological order
     }
 
     // Get real-time price for a symbol
