@@ -1393,24 +1393,8 @@
                     metaAPIInitialized = false;
                     $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
                         
-                    // Check if it's a CORS error during initialization
-                    const isCorsError = error.message.includes('CORS') || 
-                                       error.message.includes('Network') || 
-                                       error.message.includes('Failed to fetch') || 
-                                       error.name === 'TypeError' ||
-                                       (error.message && error.message.toLowerCase().includes('cross-origin'));
-                        
-                    if (isCorsError) {
-                        $('#metaapi-status').removeClass('alert-info').addClass('alert-warning');
-                        $('#metaapi-status-text').html(`
-                            <i class="bi bi-exclamation-triangle"></i> CORS Error: Browser blocking MetaAPI requests
-                            <br><small>This is common when running from localhost. Use the manual data entry section below.</small>
-                        `);
-                        showCorsError();
-                    } else {
-                        $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
-                        $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Initialization failed: ${error.message}`);
-                    }
+                    $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
+                    $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Initialization failed: ${error.message}`);
                         
                     logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region, isCorsError });
                 }

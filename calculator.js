@@ -1,10 +1,9 @@
 // Forex Position Size Calculator with MetaAPI Integration
 // Following TODO.md Phase 1-2: MetaAPI Integration and Real-time Data
 
-// MetaAPI Configuration - Simplified trader-focused approach
+// MetaAPI Configuration - REST API approach
 class MetaAPIService {
     constructor() {
-        this.client = null;
         this.config = {
             apiKey: null,
             accountId: null,
@@ -12,7 +11,7 @@ class MetaAPIService {
         };
     }
 
-    // Initialize MetaAPI - just load SDK and store config
+    // Initialize MetaAPI - just store config (no SDK needed for REST API)
     async initialize(apiKey, accountId, region = 'new-york') {
         try {
             console.log('Initializing MetaAPI with:', { accountId, region, hasApiKey: !!apiKey });
@@ -21,21 +20,8 @@ class MetaAPIService {
             this.config.apiKey = apiKey;
             this.config.accountId = accountId;
             this.config.region = region;
-
-            // Load MetaAPI SDK
-            console.log('Loading MetaAPI SDK...');
-            await this.loadMetaAPISDK();
             
-            if (!window.MetaApi) {
-                throw new Error('MetaAPI SDK failed to load properly');
-            }
-            
-            console.log('MetaAPI SDK loaded successfully');
-            
-            // Create MetaAPI client instance
-            this.client = new window.MetaApi(apiKey, { region });
-            
-            console.log('MetaAPI initialized - ready for on-demand data fetching');
+            console.log('MetaAPI initialized - ready for REST API requests');
             return true;
             
         } catch (error) {
@@ -44,128 +30,75 @@ class MetaAPIService {
         }
     }
 
-    // Load MetaAPI SDK from local installation or CDN fallback
-    async loadMetaAPISDK() {
-        // Check if already loaded
-        if (window.MetaApi) {
-            console.log('MetaAPI SDK already loaded');
-            return;
-        }
-
-        // Try local paths first, then CDN as fallback
-        const loadPaths = [
-            './lib/metaApi.es6.js',
-            './node_modules/metaapi.cloud-sdk/index.js',
-            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@latest/index.js'
-        ];
-
-        for (const path of loadPaths) {
-            console.log('Loading MetaAPI SDK from:', path);
-            try {
-                await this.loadScript(path);
-                // Give the script time to initialize
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                if (window.MetaApi) {
-                    console.log('MetaAPI SDK loaded successfully from:', path);
-                    return;
-                }
-            } catch (error) {
-                console.log(`Failed to load from ${path}:`, error.message);
-                continue;
-            }
-        }
-
-        throw new Error('Failed to load MetaAPI SDK. Please ensure you have internet connection or run: npm install && npm run build');
-    }
-
-    // Load script dynamically with better error handling
-    loadScript(src) {
-        return new Promise((resolve, reject) => {
-            // Check if script already exists
-            const existingScript = document.querySelector(`script[src="${src}"]`);
-            if (existingScript) {
-                if (window.MetaApi) {
-                    resolve();
-                    return;
-                }
-                // Remove existing script if it didn't load properly
-                existingScript.remove();
-            }
-
-            const script = document.createElement('script');
-            script.src = src;
-            script.type = 'module'; // Use ES6 modules for better compatibility
-            script.crossOrigin = 'anonymous';
-            
-            // Set timeout for loading (increased for slower connections)
-            const timeout = setTimeout(() => {
-                script.remove();
-                reject(new Error(`Timeout loading script from ${src}`));
-            }, 15000);
-            
-            script.onload = () => {
-                clearTimeout(timeout);
-                resolve();
-            };
-            
-            script.onerror = () => {
-                clearTimeout(timeout);
-                script.remove();
-                reject(new Error(`Failed to load script from ${src}`));
-            };
-            
-            document.head.appendChild(script);
-        });
-    }
-
-    // Get current price for a symbol (on-demand with fresh connection)
-    async getPrice(symbol) {
-        if (!this.client || !this.config.apiKey) {
+    // Helper method to make REST API requests
+    async makeRestRequest(url, method = 'GET') {
+        if (!this.config.apiKey) {
             throw new Error('MetaAPI not initialized. Please connect first.');
         }
 
         try {
-            console.log(`Fetching current price for ${symbol}...`);
+            console.log(`Making ${method} request to:`, url);
             
-            // Get account for this request
-            const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
-            await account.waitDeployed();
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'auth-token': this.config.apiKey,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const data = await response.json();
+            console.log('REST API response received:', data);
+            return data;
+
+        } catch (error) {
+            console.error('REST API request failed:', error);
             
-            // Create connection to get real-time prices
-            const connection = await account.connect();
-            await connection.waitSynchronized();
+            // Check if it's a CORS error
+            const isCorsError = error.message.includes('CORS') || 
+                               error.message.includes('Network') || 
+                               error.message.includes('Failed to fetch') || 
+                               error.name === 'TypeError' ||
+                               (error.message && error.message.toLowerCase().includes('cross-origin'));
             
-            // Subscribe to market data for this symbol
-            await connection.subscribeToMarketData(symbol);
-            
-            // Get symbol specification first
-            const symbolSpecification = await connection.getSymbolSpecification(symbol);
-            if (!symbolSpecification) {
-                // Unsubscribe before throwing error
-                await connection.unsubscribeFromMarketData(symbol);
-                throw new Error(`Symbol ${symbol} not found`);
+            if (isCorsError) {
+                throw new Error('CORS_ERROR: Browser blocking MetaAPI REST requests. Use manual data entry.');
             }
             
-            // Get current price
-            const price = await connection.getSymbolPrice(symbol);
-            if (!price) {
-                // Unsubscribe before throwing error
-                await connection.unsubscribeFromMarketData(symbol);
-                throw new Error(`No price data available for ${symbol}`);
+            throw error;
+        }
+    }
+
+    // Get current price for a symbol using REST API
+    async getPrice(symbol) {
+        if (!this.config.apiKey || !this.config.accountId) {
+            throw new Error('MetaAPI not initialized. Please connect first.');
+        }
+
+        try {
+            console.log(`Fetching current price for ${symbol} via REST API...`);
+            
+            const url = `https://mt-client-api-v1.${this.config.region}.agiliumtrade.ai/users/current/accounts/${this.config.accountId}/symbols/${symbol}/current-price`;
+            
+            const priceData = await this.makeRestRequest(url);
+            
+            if (!priceData || !priceData.bid || !priceData.ask) {
+                throw new Error(`Invalid price data received for ${symbol}`);
             }
             
-            console.log(`Got price for ${symbol}:`, price);
-            
-            // Unsubscribe from market data
-            await connection.unsubscribeFromMarketData(symbol);
+            console.log(`Got price for ${symbol}:`, priceData);
             
             return {
                 symbol: symbol,
-                bid: price.bid,
-                ask: price.ask,
-                time: new Date(),
-                spread: price.ask - price.bid
+                bid: priceData.bid,
+                ask: priceData.ask,
+                time: priceData.time ? new Date(priceData.time) : new Date(),
+                spread: priceData.ask - priceData.bid
             };
         } catch (error) {
             console.error(`Failed to get price for ${symbol}:`, error);
@@ -173,31 +106,22 @@ class MetaAPIService {
         }
     }
 
-    // Get historical data for ATR calculation (connection-based approach)
+    // Get historical data for ATR calculation using REST API
     async getHistoricalData(symbol, timeframe, startTime, limit = 100) {
-        if (!this.client || !this.config.apiKey) {
+        if (!this.config.apiKey || !this.config.accountId) {
             throw new Error('MetaAPI not initialized. Please connect first.');
         }
 
         try {
             const mtTimeframe = this.convertTimeframe(timeframe);
-            console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe}...`);
+            console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe} via REST API...`);
             
-            // Get account for this request
-            const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
-            await account.waitDeployed();
+            // Format startTime as ISO string
+            const startTimeISO = startTime instanceof Date ? startTime.toISOString() : new Date(startTime).toISOString();
             
-            // Create connection to get historical data
-            const connection = await account.connect();
-            await connection.waitSynchronized();
+            const url = `https://mt-market-data-client-api-v1.${this.config.region}.agiliumtrade.ai/users/current/accounts/${this.config.accountId}/historical-market-data/symbols/${symbol}/timeframes/${mtTimeframe}/candles?startTime=${encodeURIComponent(startTimeISO)}&limit=${limit}`;
             
-            // Get historical candles using the account method
-            const candles = await account.getHistoricalCandles(
-                symbol,
-                mtTimeframe,
-                startTime,
-                limit
-            );
+            const candles = await this.makeRestRequest(url);
             
             if (!candles || candles.length === 0) {
                 throw new Error(`No historical data available for ${symbol}`);
