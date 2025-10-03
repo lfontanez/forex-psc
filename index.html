@@ -1772,8 +1772,8 @@
 
             // Fetch from MetaAPI (primary data source)
             async function fetchFromMetaAPI(currencyPair, updateEntryPrice) {
-                if (!metaAPIConnected) {
-                    logger.logError('FETCH_METAAPI_NOT_CONNECTED', 'MetaAPI not connected');
+                if (!metaAPIInitialized) {
+                    logger.logError('FETCH_METAAPI_NOT_INITIALIZED', 'MetaAPI not initialized');
                     $('#metaapi-status').removeClass('alert-success').addClass('alert-warning');
                     $('#metaapi-status-text').text('Please connect to MetaAPI first');
                     useFallbackRate(currencyPair, updateEntryPrice);
@@ -1806,8 +1806,20 @@
                 } catch (error) {
                     logger.logError('FETCH_METAAPI_ERROR', error.message, { currencyPair });
                     
-                    // Fall back to fallback rates or manual entry
-                    useFallbackRate(currencyPair, updateEntryPrice);
+                    // Check if it's a CORS error
+                    if (error.message.includes('CORS') || error.message.includes('Network') || 
+                        error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                        logger.logError('FETCH_METAAPI_CORS_ERROR', 'CORS or network error detected', { 
+                            error: error.message,
+                            name: error.name
+                        });
+                        showManualDataSection();
+                        $('#current-rate').text('CORS Error - Use Manual Entry');
+                        $('#timestamp').text('Network blocked - ' + new Date().toLocaleTimeString());
+                    } else {
+                        // Fall back to fallback rates or manual entry
+                        useFallbackRate(currencyPair, updateEntryPrice);
+                    }
                 }
             }
 
@@ -1833,7 +1845,10 @@
                 const timeString = lastUpdateTime.toLocaleTimeString() + ' ' + lastUpdateTime.toLocaleDateString();
                 $('#timestamp').text(timeString + ' (Real-time)');
                 $('#api-update-time').text(timeString);
-                hideManualDataSection(); // Hide manual section when MetaAPI works
+                // Keep manual section available but indicate API is working
+                $('#manual-data-section').show();
+                $('#metaapi-status').removeClass('alert-warning').addClass('alert-success');
+                $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> MetaAPI connected - real-time data active');
                 
                 // Update entry price field if requested and no manual entry has been made
                 if (updateEntryPrice && !$('#entry-price').val()) {
@@ -1851,7 +1866,8 @@
                 if (fallbackRates[currencyPair]) {
                     logger.logApi('USING_FALLBACK_RATE', { currencyPair, rate: fallbackRates[currencyPair] });
                     displayRate(fallbackRates[currencyPair], currencyPair, updateEntryPrice, true);
-                    hideManualDataSection(); // Hide manual section if fallback works
+                    // Don't hide manual section - show it as an option even when fallback works
+                    showManualDataSection();
                 } else {
                     logger.logError('FALLBACK_RATE_NOT_AVAILABLE', 'No fallback rate available for this pair', { currencyPair });
                     $('#current-rate').text('Rate unavailable');
@@ -1869,11 +1885,13 @@
                 
                 if (isFallback) {
                     $('#timestamp').text('Using fallback rate (API unavailable)');
+                    showManualDataSection(); // Show manual section when using fallback
                 } else {
                     const timeString = lastUpdateTime.toLocaleTimeString() + ' ' + lastUpdateTime.toLocaleDateString();
                     $('#timestamp').text(timeString);
                     $('#api-update-time').text(timeString);
-                    hideManualDataSection(); // Hide manual section when API works
+                    // Keep manual section available even when API works, but show it's optional
+                    $('#manual-data-section').show();
                 }
                 
                 // Update entry price field if requested and no manual entry has been made
