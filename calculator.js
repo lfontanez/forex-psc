@@ -79,15 +79,17 @@ class MetaAPIService {
 
         // Use browser-compatible CDN URLs for MetaAPI SDK
         const cdnUrls = [
-            // Primary CDN sources with browser-compatible builds
-            'https://unpkg.com/metaapi.cloud-sdk@latest/index.js',
+            // Primary: jsdelivr works reliably
             'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@latest/index.js',
-            'https://unpkg.com/metaapi.cloud-sdk@29.3.1/index.js',
             'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/index.js',
             
             // Try local copy if available
             './lib/metaApi.es6.js',
-            './node_modules/metaapi.cloud-sdk/index.js'
+            './node_modules/metaapi.cloud-sdk/index.js',
+            
+            // Fallback: unpkg (has CORS issues but keep as last resort)
+            'https://unpkg.com/metaapi.cloud-sdk@latest/index.js',
+            'https://unpkg.com/metaapi.cloud-sdk@29.3.1/index.js'
         ];
 
         for (const url of cdnUrls) {
