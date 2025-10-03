@@ -14,17 +14,18 @@ async function loadEnvironmentConfig() {
         // Note: This requires a server that can serve the .env file or convert it to JSON
         
         // Method 1: Try to fetch from a config endpoint (recommended for production)
-        try {
-            const response = await fetch('/api/config');
-            if (response.ok) {
-                const config = await response.json();
-                Object.assign(window.ENV_CONFIG, config);
-                console.log('Environment config loaded from API');
-                return;
-            }
-        } catch (error) {
-            // API endpoint not available, continue to other methods
-        }
+        // Commented out for static deployment - uncomment if you have a backend API
+        // try {
+        //     const response = await fetch('/api/config');
+        //     if (response.ok) {
+        //         const config = await response.json();
+        //         Object.assign(window.ENV_CONFIG, config);
+        //         console.log('Environment config loaded from API');
+        //         return;
+        //     }
+        // } catch (error) {
+        //     // API endpoint not available, continue to other methods
+        // }
         
         // Method 2: Try to load from a static config.json file
         try {
