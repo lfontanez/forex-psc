@@ -148,6 +148,10 @@ class MetaAPIService {
 
         try {
             console.log(`Fetching current price for ${symbol}...`);
+            
+            // Wait a moment for connection to be ready
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
             const price = await this.connection.getSymbolPrice(symbol);
             console.log(`Got price for ${symbol}:`, price);
             
@@ -166,7 +170,7 @@ class MetaAPIService {
 
     // Get historical data for ATR calculation (on-demand only)
     async getHistoricalData(symbol, timeframe, startTime, limit = 100) {
-        if (!this.isConnected || !this.connection) {
+        if (!this.isConnected || !this.account) {
             throw new Error('MetaAPI not connected. Please connect first.');
         }
 
@@ -174,7 +178,8 @@ class MetaAPIService {
             const mtTimeframe = this.convertTimeframe(timeframe);
             console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe}...`);
             
-            const candles = await this.connection.getCandles(symbol, mtTimeframe, startTime, limit);
+            // Use account's getHistoricalCandles method instead of connection.getCandles
+            const candles = await this.account.getHistoricalCandles(symbol, mtTimeframe, startTime, limit);
             
             if (!candles || candles.length === 0) {
                 throw new Error(`No historical data available for ${symbol}`);
