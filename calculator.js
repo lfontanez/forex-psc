@@ -78,16 +78,17 @@ class MetaAPIService {
         }
 
         const cdnUrls = [
-            // Try local copy first (from npm install)
+            // Try local node_modules first (from npm install)
+            './node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js',
+            './node_modules/metaapi.cloud-sdk/index.js',
+            
+            // Try local lib copy (from npm run build)
             './lib/metaApi.es6.js',
             './lib/metaapi.min.js',
-            './node_modules/metaapi.cloud-sdk/index.js',
-            './node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js',
             
-            // Try CDN sources as fallback
+            // CDN sources as final fallback only
             'https://unpkg.com/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js',
-            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js',
-            'https://unpkg.com/metaapi.cloud-sdk/lib/metaApi.es6.js'
+            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js'
         ];
 
         for (const url of cdnUrls) {

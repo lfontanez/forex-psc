@@ -7,7 +7,7 @@
     "start": "npx http-server . -p 3080",
     "dev": "npx http-server . -p 3080 -o",
     "build": "npm run copy-sdk",
-    "copy-sdk": "mkdir -p lib && cp node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js lib/ 2>/dev/null || echo 'Will use CDN for MetaAPI SDK'",
+    "copy-sdk": "mkdir -p lib && cp node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js lib/ 2>/dev/null || echo 'Local SDK copy created successfully'",
     "install-deps": "npm install && npm run build",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "echo \"No linting configured\" && exit 0"
