@@ -165,7 +165,7 @@ class MetaAPIService {
         }
     }
 
-    // Get historical data for ATR calculation (on-demand with fresh connection)
+    // Get historical data for ATR calculation (connection-based approach)
     async getHistoricalData(symbol, timeframe, startTime, limit = 100) {
         if (!this.client || !this.config.apiKey) {
             throw new Error('MetaAPI not initialized. Please connect first.');
@@ -179,9 +179,13 @@ class MetaAPIService {
             const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
             await account.waitDeployed();
             
-            // Use the historical market data API
-            const historicalMarketData = account.historicalMarketData;
-            const candles = await historicalMarketData.getHistoricalCandles(
+            // Create connection to get historical data
+            const connection = account.getRPCConnection();
+            await connection.connect();
+            await connection.waitSynchronized();
+            
+            // Get historical candles using the connection
+            const candles = await connection.getHistoricalCandles(
                 symbol,
                 mtTimeframe,
                 startTime,
@@ -206,7 +210,39 @@ class MetaAPIService {
                 }));
         } catch (error) {
             console.error(`Failed to get historical data for ${symbol}:`, error);
-            throw error;
+            
+            // If the connection-based approach fails, try using the market data API
+            // But wrap it in a try-catch to handle potential CORS errors
+            try {
+                console.log('Trying market data API as fallback...');
+                const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
+                await account.waitDeployed();
+                
+                const mtTimeframe = this.convertTimeframe(timeframe);
+                const candles = await account.getHistoricalCandles(
+                    symbol,
+                    mtTimeframe,
+                    startTime,
+                    limit
+                );
+                
+                if (candles && candles.length > 0) {
+                    console.log(`Received ${candles.length} candles via market data API`);
+                    return candles
+                        .filter(c => c && c.high >= c.low)
+                        .map(c => ({
+                            time: c.time,
+                            open: c.open,
+                            high: c.high,
+                            low: c.low,
+                            close: c.close
+                        }));
+                }
+                throw new Error('No data from market data API');
+            } catch (fallbackError) {
+                console.error('Fallback market data API also failed:', fallbackError);
+                throw new Error(`Historical data unavailable: ${error.message}`);
+            }
         }
     }
 
@@ -283,6 +319,20 @@ class MetaAPIService {
             
         } catch (error) {
             console.error(`ATR calculation failed:`, error);
+            
+            // Check if it's a CORS error
+            const isCorsError = error.message.includes('CORS') || 
+                               error.message.includes('Network') || 
+                               error.message.includes('Failed to fetch') || 
+                               error.name === 'TypeError' ||
+                               (error.message && error.message.toLowerCase().includes('cross-origin'));
+            
+            if (isCorsError) {
+                console.warn('CORS error detected in ATR fetching, using fallback ATR');
+                // Re-throw with a more specific message so the UI can handle it appropriately
+                throw new Error('CORS_ERROR: Historical data requests blocked by browser. Use manual ATR entry.');
+            }
+            
             throw error;
         }
     }

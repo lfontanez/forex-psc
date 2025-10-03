@@ -1065,8 +1065,36 @@
                     } catch (error) {
                         logger.logError('FETCH_ATR_METAAPI_FAILED', error.message, { currencyPair, timeframe, periods });
                         
-                        // Fall back to fallback ATR
-                        atrValue = getFallbackATR(currencyPair, timeframe, periods);
+                        // Check if it's a CORS error
+                        const isCorsError = error.message.includes('CORS') || 
+                                           error.message.includes('CORS_ERROR') ||
+                                           error.message.includes('Network') || 
+                                           error.message.includes('Failed to fetch') || 
+                                           error.name === 'TypeError' ||
+                                           (error.message && error.message.toLowerCase().includes('cross-origin'));
+                        
+                        if (isCorsError) {
+                            logger.logError('FETCH_ATR_CORS_ERROR', 'CORS error detected in ATR fetching', { 
+                                error: error.message,
+                                currencyPair, timeframe, periods 
+                            });
+                            
+                            // Show manual data section and suggest manual ATR entry
+                            showManualDataSection();
+                            
+                            // Use fallback ATR but inform the user
+                            atrValue = getFallbackATR(currencyPair, timeframe, periods);
+                            
+                            // Update the ATR input field with a placeholder and show a message
+                            $('#atr-value').val(atrValue.toFixed(currencyPair.includes('JPY') ? 3 : 5));
+                            $('#atr-value').attr('placeholder', 'CORS blocked - using fallback');
+                            
+                            // Show a message to the user
+                            alert('Browser security blocked ATR data fetching. Using fallback ATR values. Please enter ATR manually if needed.');
+                        } else {
+                            // Fall back to fallback ATR for other errors
+                            atrValue = getFallbackATR(currencyPair, timeframe, periods);
+                        }
                     }
                 } else {
                     // Use fallback ATR when MetaAPI not connected
