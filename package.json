@@ -5,9 +5,9 @@
   "main": "index.html",
   "scripts": {
     "start": "npx http-server . -p 3080",
-    "dev": "npm run build && npx http-server . -p 3080 -o",
+    "dev": "npx http-server . -p 3080 -o",
     "build": "npm run copy-sdk",
-    "copy-sdk": "mkdir -p lib && cp node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js lib/ 2>/dev/null || cp node_modules/metaapi.cloud-sdk/index.js lib/metaApi.es6.js 2>/dev/null || echo 'SDK files copied'",
+    "copy-sdk": "mkdir -p lib && cp node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js lib/ 2>/dev/null || echo 'Will use CDN for MetaAPI SDK'",
     "install-deps": "npm install && npm run build",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "echo \"No linting configured\" && exit 0"
@@ -15,7 +15,6 @@
   "dependencies": {
     "metaapi.cloud-sdk": "^29.3.1"
   },
-  "type": "module",
   "devDependencies": {
     "http-server": "^14.1.1"
   },
