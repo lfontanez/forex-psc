@@ -128,21 +128,17 @@ class MetaAPIService {
         try {
             console.log(`Fetching current price for ${symbol}...`);
             
-            // Get account and establish connection for this request
+            // Get account for this request
             const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
             await account.waitDeployed();
             
-            const connection = account.getRPCConnection();
-            await connection.connect();
-            
-            // Wait briefly for connection to be ready
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const price = await connection.getSymbolPrice(symbol);
+            // Use account's getSymbolPrice method directly
+            const price = await account.getSymbolPrice(symbol);
             console.log(`Got price for ${symbol}:`, price);
             
-            // Clean up connection
-            await connection.close();
+            if (!price) {
+                throw new Error(`No price data available for ${symbol}`);
+            }
             
             return {
                 symbol: symbol,
