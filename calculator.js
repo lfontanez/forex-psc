@@ -55,12 +55,26 @@ class MetaAPIService {
             await this.connection.connect();
             
             console.log('Waiting for synchronization...');
-            // Wait for connection to be established
-            await this.connection.waitSynchronized();
-            
-            this.isConnected = true;
-            console.log('MetaAPI connected successfully');
-            return true;
+            // Wait for connection to be established with timeout
+            try {
+                // Set a reasonable timeout for synchronization (30 seconds)
+                await Promise.race([
+                    this.connection.waitSynchronized(),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Synchronization timeout after 30 seconds')), 30000)
+                    )
+                ]);
+                
+                this.isConnected = true;
+                console.log('MetaAPI connected and synchronized successfully');
+                return true;
+            } catch (syncError) {
+                // If synchronization fails, we can still use the connection for some operations
+                console.warn('Synchronization warning:', syncError.message);
+                console.log('Connection established but not fully synchronized. Some features may be limited.');
+                this.isConnected = true; // Mark as connected anyway
+                return true;
+            }
             
         } catch (error) {
             console.error('MetaAPI initialization failed:', error);

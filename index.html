@@ -1338,20 +1338,26 @@
                 logger.logApi('METAAPI_CONNECTION_ATTEMPT', { accountId, region });
                 
                 // Update UI to show connecting state
-                $(this).prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Connecting...');
-                $('#metaapi-status').show().removeClass('alert-success alert-danger').addClass('alert-info');
-                $('#metaapi-status-text').text('Connecting to MetaAPI...');
+                const $btn = $(this);
+                $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Connecting...');
+                $('#metaapi-status').show().removeClass('alert-success alert-danger alert-warning').addClass('alert-info');
+                $('#metaapi-status-text').text('Connecting to MetaAPI... This may take up to 30 seconds.');
                 
                 try {
-                    // Initialize MetaAPI
-                    await metaAPIService.initialize(apiKey, accountId, region);
+                    // Initialize MetaAPI with timeout
+                    const initPromise = metaAPIService.initialize(apiKey, accountId, region);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Connection timeout after 45 seconds. Please try again.')), 45000)
+                    );
+                    
+                    await Promise.race([initPromise, timeoutPromise]);
                     
                     // Update UI for successful connection
                     metaAPIConnected = true;
-                    $(this).hide();
+                    $btn.hide();
                     $('#metaapi-disconnect-btn').show();
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
-                    $('#metaapi-status-text').text('Connected to MetaAPI successfully! Real-time data available.');
+                    $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> Connected to MetaAPI successfully! Real-time data available.');
                     
                     logger.logApi('METAAPI_CONNECTION_SUCCESS', { accountId, region });
                     
@@ -1364,11 +1370,16 @@
                 } catch (error) {
                     // Update UI for failed connection
                     metaAPIConnected = false;
-                    $(this).prop('disabled', false).html('<i class="bi bi-plug"></i> Connect to MetaAPI');
+                    $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Connect to MetaAPI');
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
-                    $('#metaapi-status-text').text(`Connection failed: ${error.message}`);
+                    $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Connection failed: ${error.message}`);
                     
                     logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region });
+                    
+                    // Show helpful message
+                    if (error.message.includes('timeout')) {
+                        $('#metaapi-status-text').append('<br><small>Tip: Check your internet connection and ensure your MetaTrader account is deployed and running.</small>');
+                    }
                 }
             });
 
