@@ -1,22 +1,18 @@
 // Forex Position Size Calculator with MetaAPI Integration
 // Following TODO.md Phase 1-2: MetaAPI Integration and Real-time Data
 
-// MetaAPI Configuration - Browser-compatible approach
+// MetaAPI Configuration - Simplified trader-focused approach
 class MetaAPIService {
     constructor() {
         this.client = null;
-        this.account = null;
-        this.connection = null;
-        this.isConnected = false;
         this.config = {
-            // These will be set from environment or user input
             apiKey: null,
             accountId: null,
-            region: 'new-york' // Default region
+            region: 'new-york'
         };
     }
 
-    // Initialize MetaAPI client (browser-compatible)
+    // Initialize MetaAPI - just load SDK and store config
     async initialize(apiKey, accountId, region = 'new-york') {
         try {
             console.log('Initializing MetaAPI with:', { accountId, region, hasApiKey: !!apiKey });
@@ -34,33 +30,16 @@ class MetaAPIService {
                 throw new Error('MetaAPI SDK failed to load properly');
             }
             
-            console.log('Real MetaAPI SDK loaded successfully');
+            console.log('MetaAPI SDK loaded successfully');
             
-            // Initialize MetaAPI client
-            console.log('Creating MetaAPI instance...');
-            const api = new window.MetaApi(apiKey, { region });
-            this.client = api;
+            // Create MetaAPI client instance
+            this.client = new window.MetaApi(apiKey, { region });
             
-            console.log('Getting account...');
-            // Get account
-            this.account = await api.metatraderAccountApi.getAccount(accountId);
-            
-            console.log('Waiting for account deployment...');
-            // Wait for account to be deployed
-            await this.account.waitDeployed();
-            
-            console.log('Creating RPC connection...');
-            // Create connection (no need to wait for sync, we'll fetch on-demand)
-            this.connection = this.account.getRPCConnection();
-            await this.connection.connect();
-            
-            this.isConnected = true;
-            console.log('MetaAPI connected successfully - ready for on-demand data fetching');
+            console.log('MetaAPI initialized - ready for on-demand data fetching');
             return true;
             
         } catch (error) {
             console.error('MetaAPI initialization failed:', error);
-            this.isConnected = false;
             throw error;
         }
     }
@@ -140,20 +119,30 @@ class MetaAPIService {
         });
     }
 
-    // Get current price for a symbol (on-demand only)
+    // Get current price for a symbol (on-demand with fresh connection)
     async getPrice(symbol) {
-        if (!this.isConnected || !this.connection) {
-            throw new Error('MetaAPI not connected. Please connect first.');
+        if (!this.client || !this.config.apiKey) {
+            throw new Error('MetaAPI not initialized. Please connect first.');
         }
 
         try {
             console.log(`Fetching current price for ${symbol}...`);
             
-            // Wait a moment for connection to be ready
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Get account and establish connection for this request
+            const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
+            await account.waitDeployed();
             
-            const price = await this.connection.getSymbolPrice(symbol);
+            const connection = account.getRPCConnection();
+            await connection.connect();
+            
+            // Wait briefly for connection to be ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const price = await connection.getSymbolPrice(symbol);
             console.log(`Got price for ${symbol}:`, price);
+            
+            // Clean up connection
+            await connection.close();
             
             return {
                 symbol: symbol,
@@ -168,18 +157,22 @@ class MetaAPIService {
         }
     }
 
-    // Get historical data for ATR calculation (on-demand only)
+    // Get historical data for ATR calculation (on-demand with fresh connection)
     async getHistoricalData(symbol, timeframe, startTime, limit = 100) {
-        if (!this.isConnected || !this.account) {
-            throw new Error('MetaAPI not connected. Please connect first.');
+        if (!this.client || !this.config.apiKey) {
+            throw new Error('MetaAPI not initialized. Please connect first.');
         }
 
         try {
             const mtTimeframe = this.convertTimeframe(timeframe);
             console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe}...`);
             
-            // Use account's getHistoricalCandles method instead of connection.getCandles
-            const candles = await this.account.getHistoricalCandles(symbol, mtTimeframe, startTime, limit);
+            // Get account for this request
+            const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
+            await account.waitDeployed();
+            
+            // Use account's getHistoricalCandles method
+            const candles = await account.getHistoricalCandles(symbol, mtTimeframe, startTime, limit);
             
             if (!candles || candles.length === 0) {
                 throw new Error(`No historical data available for ${symbol}`);
@@ -295,18 +288,7 @@ class MetaAPIService {
         return timeframes[timeframe] || timeframes['1h'];
     }
 
-    // Disconnect from MetaAPI
-    async disconnect() {
-        try {
-            if (this.connection) {
-                await this.connection.close();
-            }
-            this.isConnected = false;
-            console.log('MetaAPI disconnected');
-        } catch (error) {
-            console.error('Error disconnecting from MetaAPI:', error);
-        }
-    }
+    // No disconnect needed - connections are per-request
 }
 
 // Timeframe conversion factors for ATR scaling

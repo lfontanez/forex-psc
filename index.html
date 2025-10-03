@@ -891,8 +891,8 @@
             // Selected API (MetaAPI only)
             let selectedApi = 'metaapi';
             
-            // MetaAPI connection status
-            let metaAPIConnected = false;
+            // MetaAPI initialization status
+            let metaAPIInitialized = false;
             
             // Store forex rates
             let forexRates = {};
@@ -1050,8 +1050,8 @@
                 
                 let atrValue;
                 
-                // Try MetaAPI if connected
-                if (metaAPIConnected) {
+                // Try MetaAPI if initialized
+                if (metaAPIInitialized) {
                     try {
                         logger.logApi('FETCH_ATR_METAAPI_ATTEMPT', { currencyPair, timeframe, periods });
                         
@@ -1347,12 +1347,11 @@
                     // Initialize MetaAPI (simple connection, no sync wait)
                     await metaAPIService.initialize(apiKey, accountId, region);
                     
-                    // Update UI for successful connection
-                    metaAPIConnected = true;
-                    $btn.hide();
-                    $('#metaapi-disconnect-btn').show();
+                    // Update UI for successful initialization
+                    metaAPIInitialized = true;
+                    $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> MetaAPI Ready');
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
-                    $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> Connected! Data will be fetched on-demand when you calculate.');
+                    $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> MetaAPI initialized! Data will be fetched on-demand when needed.');
                     
                     logger.logApi('METAAPI_CONNECTION_SUCCESS', { accountId, region });
                     
@@ -1363,11 +1362,11 @@
                     }
                     
                 } catch (error) {
-                    // Update UI for failed connection
-                    metaAPIConnected = false;
-                    $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Connect to MetaAPI');
+                    // Update UI for failed initialization
+                    metaAPIInitialized = false;
+                    $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
-                    $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Connection failed: ${error.message}`);
+                    $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Initialization failed: ${error.message}`);
                     
                     logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region });
                     
@@ -1378,26 +1377,7 @@
                 }
             });
 
-            // MetaAPI Disconnect button
-            $('#metaapi-disconnect-btn').click(async function() {
-                logger.logApi('METAAPI_DISCONNECTION_ATTEMPT', {});
-                
-                try {
-                    await metaAPIService.disconnect();
-                    
-                    // Update UI
-                    metaAPIConnected = false;
-                    $(this).hide();
-                    $('#metaapi-connect-btn').show().prop('disabled', false).html('<i class="bi bi-plug"></i> Connect to MetaAPI');
-                    $('#metaapi-status').removeClass('alert-success alert-danger').addClass('alert-info');
-                    $('#metaapi-status-text').text('Disconnected from MetaAPI');
-                    
-                    logger.logApi('METAAPI_DISCONNECTION_SUCCESS', {});
-                    
-                } catch (error) {
-                    logger.logError('METAAPI_DISCONNECTION_FAILED', error.message, {});
-                }
-            });
+            // No disconnect button needed - connections are per-request
 
             // Apply manual data button
             $('#apply-manual-data-btn').click(function() {
