@@ -13,7 +13,7 @@
     "lint": "echo \"No linting configured\" && exit 0"
   },
   "dependencies": {
-    "metaapi.cloud-sdk": "^29.3.1"
+    "metaapi.cloud-sdk": "^23.1.1"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
