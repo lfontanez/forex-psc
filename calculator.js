@@ -83,7 +83,7 @@ class MetaAPIService {
         }
     }
 
-    // Load MetaAPI SDK from CDN sources (browser-compatible)
+    // Load MetaAPI SDK from local installation or CDN fallback
     async loadMetaAPISDK() {
         // Check if already loaded
         if (window.MetaApi) {
@@ -91,39 +91,31 @@ class MetaAPIService {
             return;
         }
 
-        // Use browser-compatible CDN URLs for MetaAPI SDK
-        const cdnUrls = [
-            // Primary: jsdelivr works reliably
-            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@latest/index.js',
-            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/index.js',
-            
-            // Try local copy if available
+        // Try local paths first, then CDN as fallback
+        const loadPaths = [
             './lib/metaApi.es6.js',
             './node_modules/metaapi.cloud-sdk/index.js',
-            
-            // Fallback: unpkg (has CORS issues but keep as last resort)
-            'https://unpkg.com/metaapi.cloud-sdk@latest/index.js',
-            'https://unpkg.com/metaapi.cloud-sdk@29.3.1/index.js'
+            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@latest/index.js'
         ];
 
-        for (const url of cdnUrls) {
-            console.log('Trying to load MetaAPI from:', url);
+        for (const path of loadPaths) {
+            console.log('Loading MetaAPI SDK from:', path);
             try {
-                await this.loadScript(url);
+                await this.loadScript(path);
                 // Give the script time to initialize
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
                 if (window.MetaApi) {
-                    console.log('MetaAPI SDK loaded successfully from:', url);
+                    console.log('MetaAPI SDK loaded successfully from:', path);
                     return;
                 }
             } catch (error) {
-                console.log(`Failed to load from ${url}:`, error.message);
+                console.log(`Failed to load from ${path}:`, error.message);
                 continue;
             }
         }
 
-        throw new Error('Failed to load MetaAPI SDK from all CDN sources. Please check your internet connection and try again.');
+        throw new Error('Failed to load MetaAPI SDK. Please ensure you have internet connection or run: npm install && npm run build');
     }
 
     // Load script dynamically with better error handling
