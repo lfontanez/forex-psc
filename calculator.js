@@ -30,144 +30,11 @@ class MetaAPIService {
             console.log('Loading MetaAPI SDK...');
             await this.loadMetaAPISDK();
             
-            // Create a mock MetaAPI implementation that provides realistic data
-            window.MetaApi = class MockMetaApi {
-                    constructor(apiKey, options) {
-                        this.apiKey = apiKey;
-                        this.options = options;
-                        console.log('Mock MetaAPI initialized with region:', options?.region || 'new-york');
-                        this.metatraderAccountApi = {
-                            getAccount: async (accountId) => {
-                                console.log('Mock: Getting account', accountId);
-                                return {
-                                    waitDeployed: async () => {
-                                        console.log('Mock: Account deployment complete');
-                                        // Simulate deployment time
-                                        await new Promise(resolve => setTimeout(resolve, 500));
-                                    },
-                                    getRPCConnection: () => ({
-                                        connect: async () => {
-                                            console.log('Mock: RPC connection established');
-                                            await new Promise(resolve => setTimeout(resolve, 300));
-                                        },
-                                        waitSynchronized: async () => {
-                                            console.log('Mock: Connection synchronized');
-                                            await new Promise(resolve => setTimeout(resolve, 200));
-                                        },
-                                        getSymbolPrice: async (symbol) => {
-                                            console.log('Mock: Getting price for', symbol);
-                                            // Return realistic mock price data with small random variations
-                                            const basePrices = {
-                                                'EURUSD': { bid: 1.08450, ask: 1.08453 },
-                                                'GBPUSD': { bid: 1.26710, ask: 1.26713 },
-                                                'USDJPY': { bid: 149.870, ask: 149.872 },
-                                                'AUDUSD': { bid: 0.65898, ask: 0.65900 },
-                                                'USDCAD': { bid: 1.36932, ask: 1.36934 },
-                                                'USDCHF': { bid: 0.88156, ask: 0.88158 },
-                                                'NZDUSD': { bid: 0.59418, ask: 0.59420 },
-                                                'EURJPY': { bid: 162.548, ask: 162.550 },
-                                                'GBPJPY': { bid: 189.945, ask: 189.947 },
-                                                'EURGBP': { bid: 0.85588, ask: 0.85590 },
-                                                'AUDJPY': { bid: 98.736, ask: 98.738 },
-                                                'EURAUD': { bid: 1.64600, ask: 1.64602 },
-                                                'GBPAUD': { bid: 1.92330, ask: 1.92332 },
-                                                'XAUUSD': { bid: 2658.50, ask: 2659.00 }
-                                            };
-                                            
-                                            const basePrice = basePrices[symbol] || { bid: 1.0000, ask: 1.0001 };
-                                            
-                                            // Add small random variation (±0.1% for realism)
-                                            const variation = (Math.random() - 0.5) * 0.002;
-                                            const bid = basePrice.bid * (1 + variation);
-                                            const ask = basePrice.ask * (1 + variation);
-                                            
-                                            return {
-                                                bid: bid,
-                                                ask: ask,
-                                                time: new Date(),
-                                                spread: ask - bid
-                                            };
-                                        },
-                                        getCandles: async (symbol, timeframe, startTime, limit) => {
-                                            console.log('Mock: Getting candles for', symbol, timeframe, 'limit:', limit);
-                                            // Return realistic mock candle data for ATR calculation
-                                            const candles = [];
-                                            
-                                            // Base prices for different symbols
-                                            const basePrices = {
-                                                'EURUSD': 1.0845,
-                                                'GBPUSD': 1.2671,
-                                                'USDJPY': 149.87,
-                                                'AUDUSD': 0.6590,
-                                                'USDCAD': 1.3693,
-                                                'USDCHF': 0.8816,
-                                                'NZDUSD': 0.5942,
-                                                'EURJPY': 162.55,
-                                                'GBPJPY': 189.95,
-                                                'EURGBP': 0.8559,
-                                                'AUDJPY': 98.74,
-                                                'EURAUD': 1.6460,
-                                                'GBPAUD': 1.9233,
-                                                'XAUUSD': 2658.75
-                                            };
-                                            
-                                            const basePrice = basePrices[symbol] || 1.0000;
-                                            
-                                            // Generate realistic candle data
-                                            for (let i = 0; i < limit; i++) {
-                                                // Create realistic price movements
-                                                const trendVariation = (Math.random() - 0.5) * 0.01; // Overall trend
-                                                const volatility = symbol.includes('JPY') ? 0.5 : 
-                                                                 symbol === 'XAUUSD' ? 15.0 : 0.005;
-                                                
-                                                const open = basePrice + (trendVariation * i * 0.1);
-                                                const closeVariation = (Math.random() - 0.5) * volatility;
-                                                const close = open + closeVariation;
-                                                
-                                                const highVariation = Math.random() * volatility * 0.5;
-                                                const lowVariation = Math.random() * volatility * 0.5;
-                                                
-                                                const high = Math.max(open, close) + highVariation;
-                                                const low = Math.min(open, close) - lowVariation;
-                                                
-                                                candles.push({
-                                                    time: new Date(Date.now() - i * this.getTimeframeMilliseconds(timeframe)),
-                                                    open: open,
-                                                    high: high,
-                                                    low: low,
-                                                    close: close,
-                                                    tickVolume: Math.floor(Math.random() * 1000) + 100
-                                                });
-                                            }
-                                            
-                                            return candles.reverse(); // Return in chronological order
-                                        },
-                                        close: async () => {
-                                            console.log('Mock: Connection closed');
-                                        }
-                                    })
-                                };
-                            }
-                        };
-                    }
-                    
-                    // Helper method for timeframe conversion
-                    getTimeframeMilliseconds(timeframe) {
-                        const timeframes = {
-                            '1m': 60 * 1000,
-                            '5m': 5 * 60 * 1000,
-                            '15m': 15 * 60 * 1000,
-                            '30m': 30 * 60 * 1000,
-                            '1h': 60 * 60 * 1000,
-                            '4h': 4 * 60 * 60 * 1000,
-                            '8h': 8 * 60 * 60 * 1000,
-                            '1d': 24 * 60 * 60 * 1000
-                        };
-                        return timeframes[timeframe] || timeframes['1h'];
-                    }
-                };
-                
-            console.log('Mock MetaAPI implementation ready - provides realistic test data');
+            if (!window.MetaApi) {
+                throw new Error('MetaAPI SDK failed to load properly');
+            }
+            
+            console.log('Real MetaAPI SDK loaded successfully');
             
             // Initialize MetaAPI client
             console.log('Creating MetaAPI instance...');
@@ -293,8 +160,36 @@ class MetaAPIService {
             // Convert timeframe to MetaAPI format
             const mtTimeframe = this.convertTimeframe(timeframe);
             
+            console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe} timeframe`);
+            
+            // Get candles from MetaAPI
             const candles = await this.connection.getCandles(symbol, mtTimeframe, startTime, limit);
-            return candles.map(candle => ({
+            
+            console.log(`Received ${candles.length} candles from MetaAPI`);
+            
+            if (!candles || candles.length === 0) {
+                throw new Error(`No historical data available for ${symbol} on ${mtTimeframe}`);
+            }
+            
+            // Validate candle data
+            const validCandles = candles.filter(candle => 
+                candle && 
+                typeof candle.open === 'number' && 
+                typeof candle.high === 'number' && 
+                typeof candle.low === 'number' && 
+                typeof candle.close === 'number' &&
+                candle.high >= candle.low &&
+                candle.high >= Math.max(candle.open, candle.close) &&
+                candle.low <= Math.min(candle.open, candle.close)
+            );
+            
+            console.log(`${validCandles.length} valid candles after filtering`);
+            
+            if (validCandles.length === 0) {
+                throw new Error(`No valid candle data for ${symbol}`);
+            }
+            
+            return validCandles.map(candle => ({
                 time: candle.time,
                 open: candle.open,
                 high: candle.high,
@@ -326,41 +221,71 @@ class MetaAPIService {
     // Calculate ATR from historical data
     calculateATR(candles, periods = 14) {
         if (candles.length < periods + 1) {
-            throw new Error(`Insufficient data for ATR calculation. Need at least ${periods + 1} candles.`);
+            throw new Error(`Insufficient data for ATR calculation. Need at least ${periods + 1} candles, got ${candles.length}.`);
         }
 
+        console.log(`Calculating ATR with ${candles.length} candles, ${periods} periods`);
+        
         const trueRanges = [];
         
+        // Calculate True Range for each candle (starting from index 1)
         for (let i = 1; i < candles.length; i++) {
             const current = candles[i];
             const previous = candles[i - 1];
             
-            const tr1 = current.high - current.low;
-            const tr2 = Math.abs(current.high - previous.close);
-            const tr3 = Math.abs(current.low - previous.close);
+            // Validate candle data
+            if (!current || !previous || 
+                typeof current.high !== 'number' || typeof current.low !== 'number' || 
+                typeof current.close !== 'number' || typeof previous.close !== 'number') {
+                console.warn(`Invalid candle data at index ${i}:`, current, previous);
+                continue;
+            }
+            
+            // True Range calculation
+            const tr1 = current.high - current.low; // Current high - current low
+            const tr2 = Math.abs(current.high - previous.close); // Current high - previous close
+            const tr3 = Math.abs(current.low - previous.close); // Current low - previous close
             
             const trueRange = Math.max(tr1, tr2, tr3);
-            trueRanges.push(trueRange);
+            
+            if (trueRange > 0 && isFinite(trueRange)) {
+                trueRanges.push(trueRange);
+            }
+        }
+
+        console.log(`Calculated ${trueRanges.length} true range values`);
+        
+        if (trueRanges.length < periods) {
+            throw new Error(`Insufficient valid true range data. Need ${periods}, got ${trueRanges.length}.`);
         }
 
         // Calculate Simple Moving Average of True Range for the specified periods
-        const atrValues = [];
-        for (let i = periods - 1; i < trueRanges.length; i++) {
-            const sum = trueRanges.slice(i - periods + 1, i + 1).reduce((a, b) => a + b, 0);
-            atrValues.push(sum / periods);
+        // Use the most recent 'periods' number of true ranges
+        const recentTrueRanges = trueRanges.slice(-periods);
+        const sum = recentTrueRanges.reduce((a, b) => a + b, 0);
+        const atr = sum / periods;
+
+        console.log(`ATR calculation: sum=${sum}, periods=${periods}, ATR=${atr}`);
+        
+        if (!isFinite(atr) || atr <= 0) {
+            throw new Error(`Invalid ATR calculated: ${atr}`);
         }
 
-        // Return the most recent ATR value
-        return atrValues[atrValues.length - 1];
+        return atr;
     }
 
     // Get ATR for a symbol and timeframe
     async getATR(symbol, timeframe, periods = 14) {
         try {
+            console.log(`Calculating ATR for ${symbol}, timeframe: ${timeframe}, periods: ${periods}`);
+            
             // Calculate start time (need extra candles for ATR calculation)
             const now = new Date();
-            const candlesNeeded = periods + 10; // Extra buffer for calculation
-            const startTime = new Date(now.getTime() - candlesNeeded * this.getTimeframeMilliseconds(timeframe));
+            const candlesNeeded = Math.max(periods + 20, 50); // Ensure we have enough data
+            const timeframeMs = this.getTimeframeMilliseconds(timeframe);
+            const startTime = new Date(now.getTime() - candlesNeeded * timeframeMs);
+            
+            console.log(`Requesting ${candlesNeeded} candles from ${startTime.toISOString()}`);
             
             // Get historical data
             const candles = await this.getHistoricalData(symbol, timeframe, startTime, candlesNeeded);
@@ -369,8 +294,16 @@ class MetaAPIService {
                 throw new Error(`Insufficient historical data. Got ${candles.length} candles, need at least ${periods + 1}`);
             }
             
+            console.log(`Using ${candles.length} candles for ATR calculation`);
+            
+            // Sort candles by time to ensure proper order
+            candles.sort((a, b) => new Date(a.time) - new Date(b.time));
+            
             // Calculate and return ATR
             const atr = this.calculateATR(candles, periods);
+            
+            console.log(`Calculated ATR: ${atr} for ${symbol} (${timeframe}, ${periods} periods)`);
+            
             return atr;
             
         } catch (error) {

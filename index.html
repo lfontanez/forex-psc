@@ -1066,12 +1066,12 @@
                     } catch (error) {
                         logger.logError('FETCH_ATR_METAAPI_FAILED', error.message, { currencyPair, timeframe, periods });
                         
-                        // Fall back to simulated ATR
-                        atrValue = getSimulatedATR(currencyPair, timeframe, periods);
+                        // Fall back to fallback ATR
+                        atrValue = getFallbackATR(currencyPair, timeframe, periods);
                     }
                 } else {
-                    // Use simulated ATR when MetaAPI not connected
-                    atrValue = getSimulatedATR(currencyPair, timeframe, periods);
+                    // Use fallback ATR when MetaAPI not connected
+                    atrValue = getFallbackATR(currencyPair, timeframe, periods);
                 }
                 
                 // Update ATR value input
@@ -1086,15 +1086,15 @@
                 return atrValue;
             }
 
-            // Get simulated ATR (fallback method)
-            function getSimulatedATR(currencyPair, timeframe, periods) {
+            // Get fallback ATR when MetaAPI is unavailable
+            function getFallbackATR(currencyPair, timeframe, periods) {
                 // Get default daily ATR value for the currency pair
                 let baseATR = defaultDailyATRValues[currencyPair] || 0.0010;
-                
+        
                 // Scale the daily ATR to the selected timeframe
                 const timeframeFactor = timeframeFactors[timeframe];
                 let atrValue = baseATR * timeframeFactor;
-                
+        
                 // Adjust based on periods (fewer periods typically mean more responsive/higher ATR)
                 if (periods === '5') {
                     atrValue *= 1.2; // 5-period ATR is often ~20% higher than 14-period
@@ -1103,16 +1103,12 @@
                 } else if (periods === '20') {
                     atrValue *= 0.9; // 20-period ATR is often ~10% lower than 14-period
                 }
-                
-                // Add some randomness (±15%) to simulate real market conditions
-                const randomFactor = 0.85 + (Math.random() * 0.3);
-                atrValue = atrValue * randomFactor;
-                
-                logger.logApi('FETCH_ATR_SIMULATED', 
+        
+                logger.logApi('FETCH_ATR_FALLBACK', 
                     { currencyPair, timeframe, periods, baseATR, timeframeFactor }, 
                     { atrValue }
                 );
-                
+        
                 return atrValue;
             }
             
