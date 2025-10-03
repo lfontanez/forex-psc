@@ -132,19 +132,31 @@ class MetaAPIService {
             const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
             await account.waitDeployed();
             
-            // Use account's getSymbolPrice method directly
-            const price = await account.getSymbolPrice(symbol);
-            console.log(`Got price for ${symbol}:`, price);
+            // Create connection to get real-time prices
+            const connection = account.getRPCConnection();
+            await connection.connect();
+            await connection.waitSynchronized();
             
-            if (!price) {
+            // Get symbol specification first
+            const symbolSpecification = await connection.getSymbolSpecification(symbol);
+            if (!symbolSpecification) {
+                throw new Error(`Symbol ${symbol} not found`);
+            }
+            
+            // Get current prices
+            const prices = await connection.getPrices([symbol]);
+            if (!prices || prices.length === 0) {
                 throw new Error(`No price data available for ${symbol}`);
             }
+            
+            const price = prices[0];
+            console.log(`Got price for ${symbol}:`, price);
             
             return {
                 symbol: symbol,
                 bid: price.bid,
                 ask: price.ask,
-                time: price.time || new Date(),
+                time: new Date(),
                 spread: price.ask - price.bid
             };
         } catch (error) {
@@ -167,8 +179,14 @@ class MetaAPIService {
             const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
             await account.waitDeployed();
             
-            // Use account's getHistoricalCandles method
-            const candles = await account.getHistoricalCandles(symbol, mtTimeframe, startTime, limit);
+            // Use the historical market data API
+            const historicalMarketData = account.historicalMarketData;
+            const candles = await historicalMarketData.getHistoricalCandles(
+                symbol,
+                mtTimeframe,
+                startTime,
+                limit
+            );
             
             if (!candles || candles.length === 0) {
                 throw new Error(`No historical data available for ${symbol}`);
