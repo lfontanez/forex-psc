@@ -69,7 +69,7 @@ class MetaAPIService {
         }
     }
 
-    // Load MetaAPI SDK from various sources
+    // Load MetaAPI SDK from CDN sources (browser-compatible)
     async loadMetaAPISDK() {
         // Check if already loaded
         if (window.MetaApi) {
@@ -77,24 +77,26 @@ class MetaAPIService {
             return;
         }
 
+        // Use browser-compatible CDN URLs for MetaAPI SDK
         const cdnUrls = [
-            // Try local node_modules first (from npm install)
-            './node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js',
-            './node_modules/metaapi.cloud-sdk/index.js',
+            // Primary CDN sources with browser-compatible builds
+            'https://unpkg.com/metaapi.cloud-sdk@latest/index.js',
+            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@latest/index.js',
+            'https://unpkg.com/metaapi.cloud-sdk@29.3.1/index.js',
+            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/index.js',
             
-            // Try local lib copy (from npm run build)
+            // Try local copy if available
             './lib/metaApi.es6.js',
-            './lib/metaapi.min.js',
-            
-            // CDN sources as final fallback only
-            'https://unpkg.com/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js',
-            'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/lib/metaApi.es6.js'
+            './node_modules/metaapi.cloud-sdk/index.js'
         ];
 
         for (const url of cdnUrls) {
             console.log('Trying to load MetaAPI from:', url);
             try {
                 await this.loadScript(url);
+                // Give the script time to initialize
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
                 if (window.MetaApi) {
                     console.log('MetaAPI SDK loaded successfully from:', url);
                     return;
@@ -105,25 +107,43 @@ class MetaAPIService {
             }
         }
 
-        throw new Error('Failed to load MetaAPI SDK from all sources. Please check your internet connection and try again.');
+        throw new Error('Failed to load MetaAPI SDK from all CDN sources. Please check your internet connection and try again.');
     }
 
-    // Load script dynamically
+    // Load script dynamically with better error handling
     loadScript(src) {
         return new Promise((resolve, reject) => {
+            // Check if script already exists
+            const existingScript = document.querySelector(`script[src="${src}"]`);
+            if (existingScript) {
+                if (window.MetaApi) {
+                    resolve();
+                    return;
+                }
+                // Remove existing script if it didn't load properly
+                existingScript.remove();
+            }
+
             const script = document.createElement('script');
             script.src = src;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`Failed to load script from ${src}`));
+            script.type = 'module'; // Use ES6 modules for better compatibility
+            script.crossOrigin = 'anonymous';
             
-            // Set timeout for loading
+            // Set timeout for loading (increased for slower connections)
             const timeout = setTimeout(() => {
+                script.remove();
                 reject(new Error(`Timeout loading script from ${src}`));
-            }, 10000);
+            }, 15000);
             
             script.onload = () => {
                 clearTimeout(timeout);
                 resolve();
+            };
+            
+            script.onerror = () => {
+                clearTimeout(timeout);
+                script.remove();
+                reject(new Error(`Failed to load script from ${src}`));
             };
             
             document.head.appendChild(script);
