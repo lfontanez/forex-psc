@@ -133,24 +133,32 @@ class MetaAPIService {
             await account.waitDeployed();
             
             // Create connection to get real-time prices
-            const connection = account.getRPCConnection();
-            await connection.connect();
+            const connection = await account.connect();
             await connection.waitSynchronized();
+            
+            // Subscribe to market data for this symbol
+            await connection.subscribeToMarketData(symbol);
             
             // Get symbol specification first
             const symbolSpecification = await connection.getSymbolSpecification(symbol);
             if (!symbolSpecification) {
+                // Unsubscribe before throwing error
+                await connection.unsubscribeFromMarketData(symbol);
                 throw new Error(`Symbol ${symbol} not found`);
             }
             
-            // Get current prices
-            const prices = await connection.getPrices([symbol]);
-            if (!prices || prices.length === 0) {
+            // Get current price
+            const price = await connection.getSymbolPrice(symbol);
+            if (!price) {
+                // Unsubscribe before throwing error
+                await connection.unsubscribeFromMarketData(symbol);
                 throw new Error(`No price data available for ${symbol}`);
             }
             
-            const price = prices[0];
             console.log(`Got price for ${symbol}:`, price);
+            
+            // Unsubscribe from market data
+            await connection.unsubscribeFromMarketData(symbol);
             
             return {
                 symbol: symbol,
@@ -180,12 +188,11 @@ class MetaAPIService {
             await account.waitDeployed();
             
             // Create connection to get historical data
-            const connection = account.getRPCConnection();
-            await connection.connect();
+            const connection = await account.connect();
             await connection.waitSynchronized();
             
-            // Get historical candles using the connection
-            const candles = await connection.getHistoricalCandles(
+            // Get historical candles using the account method
+            const candles = await account.getHistoricalCandles(
                 symbol,
                 mtTimeframe,
                 startTime,
@@ -210,39 +217,7 @@ class MetaAPIService {
                 }));
         } catch (error) {
             console.error(`Failed to get historical data for ${symbol}:`, error);
-            
-            // If the connection-based approach fails, try using the market data API
-            // But wrap it in a try-catch to handle potential CORS errors
-            try {
-                console.log('Trying market data API as fallback...');
-                const account = await this.client.metatraderAccountApi.getAccount(this.config.accountId);
-                await account.waitDeployed();
-                
-                const mtTimeframe = this.convertTimeframe(timeframe);
-                const candles = await account.getHistoricalCandles(
-                    symbol,
-                    mtTimeframe,
-                    startTime,
-                    limit
-                );
-                
-                if (candles && candles.length > 0) {
-                    console.log(`Received ${candles.length} candles via market data API`);
-                    return candles
-                        .filter(c => c && c.high >= c.low)
-                        .map(c => ({
-                            time: c.time,
-                            open: c.open,
-                            high: c.high,
-                            low: c.low,
-                            close: c.close
-                        }));
-                }
-                throw new Error('No data from market data API');
-            } catch (fallbackError) {
-                console.error('Fallback market data API also failed:', fallbackError);
-                throw new Error(`Historical data unavailable: ${error.message}`);
-            }
+            throw new Error(`Historical data unavailable: ${error.message}`);
         }
     }
 
