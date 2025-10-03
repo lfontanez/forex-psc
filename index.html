@@ -1295,7 +1295,7 @@
                 let apiKey = $('#metaapi-key').val().trim();
                 let accountId = $('#metaapi-account').val().trim();
                 const region = $('#metaapi-region').val();
-                
+                    
                 // Try to load from environment variables if fields are empty
                 if (!apiKey || !accountId) {
                     try {
@@ -1304,14 +1304,14 @@
                             apiKey = apiKey || process.env.METAAPI_API_KEY;
                             accountId = accountId || process.env.METAAPI_ACCOUNT_ID;
                         }
-                        
+                            
                         // For browser context, try to load from a global config object
                         // This would be set by a separate config.js file that loads .env values
                         if (typeof window !== 'undefined' && window.ENV_CONFIG) {
                             apiKey = apiKey || window.ENV_CONFIG.METAAPI_API_KEY;
                             accountId = accountId || window.ENV_CONFIG.METAAPI_ACCOUNT_ID;
                         }
-                        
+                            
                         // Auto-fill the form fields if we found values
                         if (apiKey && !$('#metaapi-key').val()) {
                             $('#metaapi-key').val(apiKey);
@@ -1321,56 +1321,68 @@
                             $('#metaapi-account').val(accountId);
                             logger.logApi('METAAPI_ACCOUNT_LOADED_FROM_ENV', { source: 'environment' });
                         }
-                        
+                            
                     } catch (error) {
                         logger.logError('ENV_LOAD_FAILED', error.message);
                     }
                 }
-                
+                    
                 if (!apiKey || !accountId) {
                     alert('Please enter both MetaAPI key and Account ID, or ensure they are set in your .env file');
                     return;
                 }
-                
+                    
                 logger.logApi('METAAPI_CONNECTION_ATTEMPT', { accountId, region });
-                
+                    
                 // Update UI to show connecting state
                 const $btn = $(this);
                 $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Connecting...');
                 $('#metaapi-status').show().removeClass('alert-success alert-danger alert-warning').addClass('alert-info');
                 $('#metaapi-status-text').text('Connecting to MetaAPI...');
-                
+                    
                 try {
                     // Initialize MetaAPI (simple connection, no sync wait)
                     await metaAPIService.initialize(apiKey, accountId, region);
-                    
+                        
                     // Update UI for successful initialization
                     metaAPIInitialized = true;
                     $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> MetaAPI Ready');
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
                     $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> MetaAPI initialized! Data will be fetched on-demand when needed.');
-                    
+                        
                     logger.logApi('METAAPI_CONNECTION_SUCCESS', { accountId, region });
-                    
+                        
                     // Refresh current pair if selected
                     const currencyPair = $('#currency-pair').val();
                     if (currencyPair) {
                         fetchForexRate(currencyPair, true);
                     }
-                    
+                        
                 } catch (error) {
                     // Update UI for failed initialization
                     metaAPIInitialized = false;
                     $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
-                    $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
-                    $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Initialization failed: ${error.message}`);
-                    
-                    logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region });
-                    
-                    // Show helpful message
-                    if (error.message.includes('timeout')) {
-                        $('#metaapi-status-text').append('<br><small>Tip: Check your internet connection and ensure your MetaTrader account is deployed and running.</small>');
+                        
+                    // Check if it's a CORS error during initialization
+                    const isCorsError = error.message.includes('CORS') || 
+                                       error.message.includes('Network') || 
+                                       error.message.includes('Failed to fetch') || 
+                                       error.name === 'TypeError' ||
+                                       (error.message && error.message.toLowerCase().includes('cross-origin'));
+                        
+                    if (isCorsError) {
+                        $('#metaapi-status').removeClass('alert-info').addClass('alert-warning');
+                        $('#metaapi-status-text').html(`
+                            <i class="bi bi-exclamation-triangle"></i> CORS Error: Browser blocking MetaAPI requests
+                            <br><small>This is common when running from localhost. Use the manual data entry section below.</small>
+                        `);
+                        showCorsError();
+                    } else {
+                        $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
+                        $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Initialization failed: ${error.message}`);
                     }
+                        
+                    logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region, isCorsError });
                 }
             });
 
@@ -1459,6 +1471,27 @@
             function hideManualDataSection() {
                 $('#manual-data-section').hide();
                 logger.logCalculation('MANUAL_DATA_SECTION_HIDDEN', { reason: 'API success' });
+            }
+
+            // Function to show CORS-specific error messaging
+            function showCorsError() {
+                showManualDataSection();
+                
+                // Add specific CORS guidance to the manual section
+                const corsGuidance = `
+                    <div class="alert alert-warning mt-3">
+                        <h6><i class="bi bi-exclamation-triangle"></i> CORS Restriction Detected</h6>
+                        <p class="mb-1">Your browser is blocking MetaAPI requests due to Cross-Origin Resource Sharing (CORS) policies.</p>
+                        <p class="mb-0"><strong>Solution:</strong> Use the manual data entry fields below, or deploy this application to a web server with proper CORS headers.</p>
+                    </div>
+                `;
+                
+                // Only add the guidance once
+                if (!$('#cors-guidance').length) {
+                    $('#manual-data-section').prepend(`<div id="cors-guidance">${corsGuidance}</div>`);
+                }
+                
+                logger.logCalculation('CORS_ERROR_HANDLED', { action: 'showed manual data section with CORS guidance' });
             }
 
             // Update account currency symbol
@@ -1803,21 +1836,37 @@
                     // Display rate with spread information
                     displayMetaAPIRate(priceData, currencyPair, updateEntryPrice);
                     
+                    // Hide manual data section when MetaAPI works
+                    hideManualDataSection();
+                    
                 } catch (error) {
                     logger.logError('FETCH_METAAPI_ERROR', error.message, { currencyPair });
                     
                     // Check if it's a CORS error
-                    if (error.message.includes('CORS') || error.message.includes('Network') || 
-                        error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    const isCorsError = error.message.includes('CORS') || 
+                                       error.message.includes('Network') || 
+                                       error.message.includes('Failed to fetch') || 
+                                       error.name === 'TypeError' ||
+                                       (error.message && error.message.toLowerCase().includes('cross-origin'));
+                    
+                    if (isCorsError) {
                         logger.logError('FETCH_METAAPI_CORS_ERROR', 'CORS or network error detected', { 
                             error: error.message,
-                            name: error.name
+                            name: error.name,
+                            stack: error.stack
                         });
-                        showManualDataSection();
+                        
+                        // Show clear CORS error message
+                        showCorsError();
                         $('#current-rate').text('CORS Error - Use Manual Entry');
                         $('#timestamp').text('Network blocked - ' + new Date().toLocaleTimeString());
+                        
+                        // Update MetaAPI status to show CORS issue
+                        $('#metaapi-status').removeClass('alert-success alert-info').addClass('alert-warning');
+                        $('#metaapi-status-text').html('<i class="bi bi-exclamation-triangle"></i> CORS Error: Browser blocking MetaAPI requests. Use manual data entry below.');
+                        
                     } else {
-                        // Fall back to fallback rates or manual entry
+                        // Fall back to fallback rates or manual entry for other errors
                         useFallbackRate(currencyPair, updateEntryPrice);
                     }
                 }
