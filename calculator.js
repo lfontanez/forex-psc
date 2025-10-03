@@ -50,31 +50,13 @@ class MetaAPIService {
             await this.account.waitDeployed();
             
             console.log('Creating RPC connection...');
-            // Create connection
+            // Create connection (no need to wait for sync, we'll fetch on-demand)
             this.connection = this.account.getRPCConnection();
             await this.connection.connect();
             
-            console.log('Waiting for synchronization...');
-            // Wait for connection to be established with timeout
-            try {
-                // Set a reasonable timeout for synchronization (30 seconds)
-                await Promise.race([
-                    this.connection.waitSynchronized(),
-                    new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Synchronization timeout after 30 seconds')), 30000)
-                    )
-                ]);
-                
-                this.isConnected = true;
-                console.log('MetaAPI connected and synchronized successfully');
-                return true;
-            } catch (syncError) {
-                // If synchronization fails, we can still use the connection for some operations
-                console.warn('Synchronization warning:', syncError.message);
-                console.log('Connection established but not fully synchronized. Some features may be limited.');
-                this.isConnected = true; // Mark as connected anyway
-                return true;
-            }
+            this.isConnected = true;
+            console.log('MetaAPI connected successfully - ready for on-demand data fetching');
+            return true;
             
         } catch (error) {
             console.error('MetaAPI initialization failed:', error);
@@ -158,14 +140,17 @@ class MetaAPIService {
         });
     }
 
-    // Get real-time price for a symbol
+    // Get current price for a symbol (on-demand only)
     async getPrice(symbol) {
         if (!this.isConnected || !this.connection) {
-            throw new Error('MetaAPI not connected');
+            throw new Error('MetaAPI not connected. Please connect first.');
         }
 
         try {
+            console.log(`Fetching current price for ${symbol}...`);
             const price = await this.connection.getSymbolPrice(symbol);
+            console.log(`Got price for ${symbol}:`, price);
+            
             return {
                 symbol: symbol,
                 bid: price.bid,
@@ -179,53 +164,34 @@ class MetaAPIService {
         }
     }
 
-    // Get historical data for ATR calculation
+    // Get historical data for ATR calculation (on-demand only)
     async getHistoricalData(symbol, timeframe, startTime, limit = 100) {
         if (!this.isConnected || !this.connection) {
-            throw new Error('MetaAPI not connected');
+            throw new Error('MetaAPI not connected. Please connect first.');
         }
 
         try {
-            // Convert timeframe to MetaAPI format
             const mtTimeframe = this.convertTimeframe(timeframe);
+            console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe}...`);
             
-            console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe} timeframe`);
-            
-            // Get candles from MetaAPI
             const candles = await this.connection.getCandles(symbol, mtTimeframe, startTime, limit);
             
-            console.log(`Received ${candles.length} candles from MetaAPI`);
-            
             if (!candles || candles.length === 0) {
-                throw new Error(`No historical data available for ${symbol} on ${mtTimeframe}`);
+                throw new Error(`No historical data available for ${symbol}`);
             }
             
-            // Validate candle data
-            const validCandles = candles.filter(candle => 
-                candle && 
-                typeof candle.open === 'number' && 
-                typeof candle.high === 'number' && 
-                typeof candle.low === 'number' && 
-                typeof candle.close === 'number' &&
-                candle.high >= candle.low &&
-                candle.high >= Math.max(candle.open, candle.close) &&
-                candle.low <= Math.min(candle.open, candle.close)
-            );
+            console.log(`Received ${candles.length} candles`);
             
-            console.log(`${validCandles.length} valid candles after filtering`);
-            
-            if (validCandles.length === 0) {
-                throw new Error(`No valid candle data for ${symbol}`);
-            }
-            
-            return validCandles.map(candle => ({
-                time: candle.time,
-                open: candle.open,
-                high: candle.high,
-                low: candle.low,
-                close: candle.close,
-                volume: candle.tickVolume || candle.realVolume || 0
-            }));
+            // Simple validation and mapping
+            return candles
+                .filter(c => c && c.high >= c.low)
+                .map(c => ({
+                    time: c.time,
+                    open: c.open,
+                    high: c.high,
+                    low: c.low,
+                    close: c.close
+                }));
         } catch (error) {
             console.error(`Failed to get historical data for ${symbol}:`, error);
             throw error;
@@ -250,93 +216,61 @@ class MetaAPIService {
     // Calculate ATR from historical data
     calculateATR(candles, periods = 14) {
         if (candles.length < periods + 1) {
-            throw new Error(`Insufficient data for ATR calculation. Need at least ${periods + 1} candles, got ${candles.length}.`);
+            throw new Error(`Need ${periods + 1} candles for ATR`);
         }
-
-        console.log(`Calculating ATR with ${candles.length} candles, ${periods} periods`);
         
         const trueRanges = [];
         
-        // Calculate True Range for each candle (starting from index 1)
+        // Calculate True Range for each candle
         for (let i = 1; i < candles.length; i++) {
-            const current = candles[i];
-            const previous = candles[i - 1];
+            const curr = candles[i];
+            const prev = candles[i - 1];
             
-            // Validate candle data
-            if (!current || !previous || 
-                typeof current.high !== 'number' || typeof current.low !== 'number' || 
-                typeof current.close !== 'number' || typeof previous.close !== 'number') {
-                console.warn(`Invalid candle data at index ${i}:`, current, previous);
-                continue;
-            }
+            const tr = Math.max(
+                curr.high - curr.low,
+                Math.abs(curr.high - prev.close),
+                Math.abs(curr.low - prev.close)
+            );
             
-            // True Range calculation
-            const tr1 = current.high - current.low; // Current high - current low
-            const tr2 = Math.abs(current.high - previous.close); // Current high - previous close
-            const tr3 = Math.abs(current.low - previous.close); // Current low - previous close
-            
-            const trueRange = Math.max(tr1, tr2, tr3);
-            
-            if (trueRange > 0 && isFinite(trueRange)) {
-                trueRanges.push(trueRange);
-            }
+            trueRanges.push(tr);
         }
-
-        console.log(`Calculated ${trueRanges.length} true range values`);
         
-        if (trueRanges.length < periods) {
-            throw new Error(`Insufficient valid true range data. Need ${periods}, got ${trueRanges.length}.`);
-        }
-
-        // Calculate Simple Moving Average of True Range for the specified periods
-        // Use the most recent 'periods' number of true ranges
-        const recentTrueRanges = trueRanges.slice(-periods);
-        const sum = recentTrueRanges.reduce((a, b) => a + b, 0);
-        const atr = sum / periods;
-
-        console.log(`ATR calculation: sum=${sum}, periods=${periods}, ATR=${atr}`);
+        // Average the most recent 'periods' true ranges
+        const recentTR = trueRanges.slice(-periods);
+        const atr = recentTR.reduce((a, b) => a + b, 0) / periods;
         
         if (!isFinite(atr) || atr <= 0) {
-            throw new Error(`Invalid ATR calculated: ${atr}`);
+            throw new Error('Invalid ATR calculated');
         }
-
+        
         return atr;
     }
 
-    // Get ATR for a symbol and timeframe
+    // Get ATR for a symbol and timeframe (on-demand only)
     async getATR(symbol, timeframe, periods = 14) {
         try {
-            console.log(`Calculating ATR for ${symbol}, timeframe: ${timeframe}, periods: ${periods}`);
+            console.log(`Fetching ATR for ${symbol} (${timeframe}, ${periods} periods)...`);
             
-            // Calculate start time (need extra candles for ATR calculation)
-            const now = new Date();
-            const candlesNeeded = Math.max(periods + 20, 50); // Ensure we have enough data
+            // Calculate how many candles we need
+            const candlesNeeded = periods + 10; // Small buffer
             const timeframeMs = this.getTimeframeMilliseconds(timeframe);
-            const startTime = new Date(now.getTime() - candlesNeeded * timeframeMs);
-            
-            console.log(`Requesting ${candlesNeeded} candles from ${startTime.toISOString()}`);
+            const startTime = new Date(Date.now() - candlesNeeded * timeframeMs);
             
             // Get historical data
             const candles = await this.getHistoricalData(symbol, timeframe, startTime, candlesNeeded);
             
             if (candles.length < periods + 1) {
-                throw new Error(`Insufficient historical data. Got ${candles.length} candles, need at least ${periods + 1}`);
+                throw new Error(`Need ${periods + 1} candles, got ${candles.length}`);
             }
             
-            console.log(`Using ${candles.length} candles for ATR calculation`);
-            
-            // Sort candles by time to ensure proper order
-            candles.sort((a, b) => new Date(a.time) - new Date(b.time));
-            
-            // Calculate and return ATR
+            // Calculate ATR
             const atr = this.calculateATR(candles, periods);
-            
-            console.log(`Calculated ATR: ${atr} for ${symbol} (${timeframe}, ${periods} periods)`);
+            console.log(`ATR calculated: ${atr}`);
             
             return atr;
             
         } catch (error) {
-            console.error(`Failed to calculate ATR for ${symbol}:`, error);
+            console.error(`ATR calculation failed:`, error);
             throw error;
         }
     }

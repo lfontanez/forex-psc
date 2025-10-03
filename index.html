@@ -1341,23 +1341,18 @@
                 const $btn = $(this);
                 $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Connecting...');
                 $('#metaapi-status').show().removeClass('alert-success alert-danger alert-warning').addClass('alert-info');
-                $('#metaapi-status-text').text('Connecting to MetaAPI... This may take up to 30 seconds.');
+                $('#metaapi-status-text').text('Connecting to MetaAPI...');
                 
                 try {
-                    // Initialize MetaAPI with timeout
-                    const initPromise = metaAPIService.initialize(apiKey, accountId, region);
-                    const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Connection timeout after 45 seconds. Please try again.')), 45000)
-                    );
-                    
-                    await Promise.race([initPromise, timeoutPromise]);
+                    // Initialize MetaAPI (simple connection, no sync wait)
+                    await metaAPIService.initialize(apiKey, accountId, region);
                     
                     // Update UI for successful connection
                     metaAPIConnected = true;
                     $btn.hide();
                     $('#metaapi-disconnect-btn').show();
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
-                    $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> Connected to MetaAPI successfully! Real-time data available.');
+                    $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> Connected! Data will be fetched on-demand when you calculate.');
                     
                     logger.logApi('METAAPI_CONNECTION_SUCCESS', { accountId, region });
                     
