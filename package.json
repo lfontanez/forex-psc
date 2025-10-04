@@ -1,20 +1,15 @@
 {
   "name": "forex-position-calculator",
-  "version": "2.0.0",
-  "description": "Professional Forex Position Size Calculator with Real-time MetaAPI Integration",
+  "version": "3.0.0",
+  "description": "Professional Forex Position Size Calculator with MetaAPI REST API Integration",
   "main": "index.html",
   "scripts": {
     "start": "npx http-server . -p 3080",
     "dev": "npx http-server . -p 3080 -o",
-    "build": "npm run copy-sdk",
-    "copy-sdk": "mkdir -p lib && (cp node_modules/metaapi.cloud-sdk/index.js lib/metaApi.es6.js 2>/dev/null || cp node_modules/metaapi.cloud-sdk/lib/metaApi.es6.js lib/ 2>/dev/null || echo 'Will use CDN for MetaAPI SDK')",
-    "install-deps": "npm install && npm run build",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "echo \"No linting configured\" && exit 0"
   },
-  "dependencies": {
-    "metaapi.cloud-sdk": "^13.2.9"
-  },
+  "dependencies": {},
   "devDependencies": {
     "http-server": "^14.1.1"
   },
@@ -27,11 +22,13 @@
     "trading",
     "position-sizing",
     "metaapi",
+    "rest-api",
     "risk-management",
     "real-time",
     "atr",
     "trading-calculator",
-    "financial-tools"
+    "financial-tools",
+    "no-dependencies"
   ],
   "author": "Forex Calculator Team",
   "license": "MIT",
