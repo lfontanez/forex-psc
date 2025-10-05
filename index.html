@@ -1135,15 +1135,15 @@
                 
                 // Convert ATR to pips
                 const atrPips = atrValue / pipSize;
-                const slPips = Math.round(atrPips * atrMultiplier); // Round to integer
+                const slPips = atrPips * atrMultiplier;
                 
                 logger.logCalculation('APPLY_ATR_TO_SL_CALCULATION', 
                     { atrValue, atrMultiplier, pipSize, atrPips }, 
                     { slPips }
                 );
                 
-                // Update the stop loss pips field
-                $('#stop-loss-pips').val(slPips);
+                // Update the stop loss pips field with one decimal place
+                $('#stop-loss-pips').val(slPips.toFixed(1));
                 
                 // Trigger change to update stop loss price
                 $('#stop-loss-pips').trigger('change');
@@ -1225,21 +1225,21 @@
                 
                 // Convert ATR to pips
                 const atrPips = atrValue / pipSize;
-                const slPips = Math.round(atrPips * atrMultiplier); // Round to integer
+                const slPips = atrPips * atrMultiplier;
                 
                 logger.logCalculation('UPDATE_ATR_SL_CALCULATION', 
                     { atrValue, atrMultiplier, pipSize, atrPips }, 
                     { slPips }
                 );
                 
-                // Update displays
-                $('#sl-atr-pips').text(slPips + ' pips');
-                $('#atr-sl-value').text(slPips);
+                // Update displays with one decimal place
+                $('#sl-atr-pips').text(slPips.toFixed(1) + ' pips');
+                $('#atr-sl-value').text(slPips.toFixed(1));
                 
                 // Store for calculations
                 currentATR = atrValue;
                 
-                logger.logCalculation('UPDATE_ATR_SL_COMPLETED', { slPips: slPips });
+                logger.logCalculation('UPDATE_ATR_SL_COMPLETED', { slPips: slPips.toFixed(1) });
             }
 
             // Refresh rate button click handler
