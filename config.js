@@ -29,7 +29,7 @@ async function loadEnvironmentConfig() {
         
         // Method 2: Try to load from a static config.json file
         try {
-            const response = await fetch('/config.json');
+            const response = await fetch('./config.json');
             if (response.ok) {
                 const config = await response.json();
                 Object.assign(window.ENV_CONFIG, config);
@@ -53,6 +53,58 @@ async function loadEnvironmentConfig() {
         
         if (Object.keys(window.ENV_CONFIG).length > 0) {
             console.log('Environment config loaded from meta tags');
+        }
+        
+        // Method 4: Try to load from .env file as last resort
+        try {
+            const response = await fetch('./.env');
+            if (response.ok) {
+                const envText = await response.text();
+                console.log('Found .env file, attempting to parse...');
+                
+                // Parse .env file format (KEY=value lines)
+                const lines = envText.split('\n');
+                let foundValues = false;
+                
+                lines.forEach(line => {
+                    // Skip empty lines and comments
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine || trimmedLine.startsWith('#')) {
+                        return;
+                    }
+                    
+                    // Parse KEY=value format
+                    const equalIndex = trimmedLine.indexOf('=');
+                    if (equalIndex > 0) {
+                        const key = trimmedLine.substring(0, equalIndex).trim();
+                        let value = trimmedLine.substring(equalIndex + 1).trim();
+                        
+                        // Remove quotes if present
+                        if ((value.startsWith('"') && value.endsWith('"')) || 
+                            (value.startsWith("'") && value.endsWith("'"))) {
+                            value = value.substring(1, value.length - 1);
+                        }
+                        
+                        // Only store MetaAPI-related keys
+                        if (key === 'METAAPI_API_KEY' || 
+                            key === 'METAAPI_ACCOUNT_ID' || 
+                            key === 'METAAPI_REGION') {
+                            window.ENV_CONFIG[key] = value;
+                            foundValues = true;
+                            console.log(`Loaded ${key} from .env file`);
+                        }
+                    }
+                });
+                
+                if (foundValues) {
+                    console.log('Environment config loaded from .env file');
+                } else {
+                    console.log('.env file found but no MetaAPI credentials detected');
+                }
+            }
+        } catch (error) {
+            // .env file not available or not readable, this is expected in many deployments
+            console.log('.env file not available (this is normal for production deployments)');
         }
         
     } catch (error) {
