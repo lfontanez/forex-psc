@@ -4,8 +4,8 @@ A professional web-based calculator that helps traders determine optimal positio
 
 ## Features
 
-- **Real-time Data**: Integrates with MetaAPI for live bid/ask prices and spreads
-- **Historical ATR**: Calculates Average True Range using real market data from MetaAPI
+- **Real-time Data**: Integrates with MetaAPI REST API for live bid/ask prices and spreads
+- **Historical ATR**: Calculates Average True Range using real market data via REST API
 - **Timeframe Selection**: Supports 1m, 5m, 15m, 30m, 1h, 4h, 8h and Daily timeframes
 - **Smart Fallbacks**: Graceful degradation from live data → fallback rates → manual entry
 - **Risk Management Tools**: Calculates risk amounts based on account size and trade parameters
@@ -15,15 +15,16 @@ A professional web-based calculator that helps traders determine optimal positio
 
 ## Technical Requirements
 
-- Modern web browser with ES6+ support
+- Modern web browser with ES6+ support and fetch API
 - MetaAPI account and credentials for real-time data
-- Bootstrap 5.3.0-alpha1 CSS framework
-- jQuery for DOM manipulation
+- Bootstrap 5.3.0-alpha1 CSS framework (loaded via CDN)
+- jQuery for DOM manipulation (loaded via CDN)
+- No build step or SDK installation required
 
 ## Quick Start
 
 1. **Clone or download** the project files
-2. **Install dependencies and build**: `npm run install-deps`
+2. **Open index.html** in your browser (no build step needed!)
 3. **Get MetaAPI credentials**:
    - Sign up at [MetaAPI.cloud](https://metaapi.cloud)
    - Create a MetaTrader account connection
