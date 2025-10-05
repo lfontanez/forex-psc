@@ -1130,8 +1130,7 @@
                 
                 // Calculate ATR-based stop loss in pips
                 const currencyPair = $('#currency-pair').val();
-                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                const pipSize = getPipSize(currencyPair);
                 
                 // Convert ATR to pips
                 const atrPips = atrValue / pipSize;
@@ -1181,8 +1180,7 @@
                 
                 // Calculate ATR-based take profit in pips
                 const currencyPair = $('#currency-pair').val();
-                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                const pipSize = getPipSize(currencyPair);
                 
                 // Convert ATR to pips
                 const atrPips = atrValue / pipSize;
@@ -1220,8 +1218,7 @@
                 
                 // Calculate ATR-based stop loss in pips
                 const currencyPair = $('#currency-pair').val();
-                const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                const pipSize = getPipSize(currencyPair);
                 
                 // Convert ATR to pips
                 const atrPips = atrValue / pipSize;
@@ -1550,7 +1547,7 @@
                     );
                     
                     const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    const pipSize = getPipSize(currencyPair);
                     
                     let stopLossPrice;
                     if (tradeDirection === 'buy') {
@@ -1581,7 +1578,7 @@
                     );
                     
                     const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    const pipSize = getPipSize(currencyPair);
                     
                     let stopLossPips;
                     if (tradeDirection === 'buy') {
@@ -1617,7 +1614,7 @@
                     );
                     
                     const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    const pipSize = getPipSize(currencyPair);
                     
                     let takeProfitPrice;
                     if (tradeDirection === 'buy') {
@@ -1648,7 +1645,7 @@
                     );
                     
                     const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    const pipSize = getPipSize(currencyPair);
                     
                     let takeProfitPips;
                     if (tradeDirection === 'buy') {
@@ -1706,8 +1703,7 @@
                 // Determine stop loss in pips if not directly entered
                 let actualStopLossPips = stopLossPips;
                 if (isNaN(actualStopLossPips) && !isNaN(stopLossPrice)) {
-                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    const pipSize = getPipSize(currencyPair);
                     
                     if (tradeDirection === 'buy') {
                         actualStopLossPips = (entryPrice - stopLossPrice) / pipSize;
@@ -1743,7 +1739,7 @@
                 
                 // Calculate take profit price
                 const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                const pipSize = Math.pow(10, -pipDecimalPlaces);
+                const pipSize = getPipSize(currencyPair);
                 
                 let takeProfitPrice;
                 if (tradeDirection === 'buy') {
@@ -1954,7 +1950,7 @@
                 }
             }
 
-            // Get pip decimal places based on currency pair
+            // Get pip decimal places based on currency pair (for display formatting)
             function getPipDecimalPlaces(currencyPair) {
                 let decimals;
                 if (currencyPair.includes('JPY')) {
@@ -1967,6 +1963,21 @@
                 
                 logger.logCalculation('GET_PIP_DECIMAL_PLACES', { currencyPair }, { decimals });
                 return decimals;
+            }
+
+            // Get actual pip size for calculations (not display)
+            function getPipSize(currencyPair) {
+                let pipSize;
+                if (currencyPair.includes('JPY')) {
+                    pipSize = 0.01; // JPY pairs: 1 pip = 0.01
+                } else if (currencyPair === 'XAUUSD') {
+                    pipSize = 0.01; // Gold: 1 pip = 0.01
+                } else {
+                    pipSize = 0.0001; // Standard pairs: 1 pip = 0.0001
+                }
+                
+                logger.logCalculation('GET_PIP_SIZE', { currencyPair }, { pipSize });
+                return pipSize;
             }
 
             // Format rate according to currency pair
@@ -2007,8 +2018,7 @@
                     
                     if (!isNaN(atrValue) && !isNaN(atrMultiplier)) {
                         // Calculate ATR-based stop loss in pips
-                        const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                        const pipSize = Math.pow(10, -pipDecimalPlaces);
+                        const pipSize = getPipSize(currencyPair);
                         
                         // Convert ATR to pips
                         const atrPips = atrValue / pipSize;
@@ -2041,8 +2051,7 @@
                 
                 // If take profit price is not provided, calculate it from pips
                 if (isNaN(takeProfitPrice) && !isNaN(takeProfitPips)) {
-                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    const pipSize = getPipSize(currencyPair);
                     
                     if (tradeDirection === 'buy') {
                         takeProfitPrice = entryPrice + (takeProfitPips * pipSize);
@@ -2057,8 +2066,7 @@
                 }
                 // If take profit pips is not provided, calculate it from price
                 else if (!isNaN(takeProfitPrice) && isNaN(takeProfitPips)) {
-                    const pipDecimalPlaces = getPipDecimalPlaces(currencyPair);
-                    const pipSize = Math.pow(10, -pipDecimalPlaces);
+                    const pipSize = getPipSize(currencyPair);
                     
                     if (tradeDirection === 'buy') {
                         takeProfitPips = Math.round((takeProfitPrice - entryPrice) / pipSize); // Ensure integer
