@@ -538,13 +538,9 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Enter ATR Value:</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="atr-value" step="0.00001" placeholder="e.g., 0.00120">
-                                <button class="btn btn-outline-secondary" type="button" id="fetch-atr-btn">
-                                    <i class="bi bi-download"></i> Get ATR
-                                </button>
-                            </div>
+                            <label class="form-label">ATR Value (auto-fetched):</label>
+                            <input type="number" class="form-control" id="atr-value" step="0.00001" placeholder="Auto-fetching or enter manually">
+                            <small class="text-muted">Automatically fetched when pair/timeframe changes</small>
                         </div>
                     </div>
                     <div class="row mt-3">
@@ -989,25 +985,12 @@
                 const timeframeText = $(this).text();
                 $('#atr-timeframe-display').text(timeframeText + ' timeframe');
                 
-                // Recalculate ATR for the new timeframe
+                // Automatically fetch ATR for the new timeframe
                 const currencyPair = $('#currency-pair').val();
                 if (currencyPair) {
-                    // If we have an ATR value, rescale it for the new timeframe
-                    const atrValue = parseFloat($('#atr-value').val());
-                    if (!isNaN(atrValue)) {
-                        const scaledATR = rescaleATRForTimeframeChange(atrValue, oldTimeframe, newTimeframe);
-                        $('#atr-value').val(scaledATR.toFixed(currencyPair.includes('JPY') ? 3 : 5));
-                        logger.logCalculation('ATR_RESCALED_FOR_TIMEFRAME', 
-                            { oldValue: atrValue, oldTimeframe, newTimeframe }, 
-                            { newValue: scaledATR }
-                        );
-                        
-                        // Update ATR-based stop loss
-                        updateATRStopLoss();
-                    } else {
-                        // If no ATR value is set, fetch a new one
-                        fetchATR(currencyPair, globalTimeframe);
-                    }
+                    const periods = $('#atr-periods').val();
+                    logger.logApi('AUTO_FETCH_ATR_TIMEFRAME_CHANGED', { currencyPair, oldTimeframe, newTimeframe, periods });
+                    fetchATR(currencyPair, globalTimeframe, periods);
                 }
             });
 
@@ -1027,20 +1010,6 @@
                 return currentATRValue * scalingRatio;
             }
 
-            // Fetch ATR button click handler
-            $('#fetch-atr-btn').click(function(e) {
-                e.preventDefault();
-                const currencyPair = $('#currency-pair').val();
-                const periods = $('#atr-periods').val();
-                
-                if (currencyPair) {
-                    logger.logApi('FETCH_ATR_INITIATED', { currencyPair, periods, timeframe: globalTimeframe });
-                    fetchATR(currencyPair, globalTimeframe, periods);
-                } else {
-                    alert('Please select a currency pair first');
-                    logger.logError('FETCH_ATR_FAILED', 'No currency pair selected');
-                }
-            });
             
             // Function to fetch ATR from MetaAPI
             async function fetchATR(currencyPair, timeframe, periods = '14') {
@@ -1523,8 +1492,10 @@
                     
                     fetchForexRate(currencyPair, true);
                     
-                    // Also fetch ATR for the new pair
-                    fetchATR(currencyPair, globalTimeframe, $('#atr-periods').val());
+                    // Automatically fetch ATR for the new pair
+                    const periods = $('#atr-periods').val();
+                    logger.logApi('AUTO_FETCH_ATR_INITIATED', { currencyPair, periods, timeframe: globalTimeframe });
+                    fetchATR(currencyPair, globalTimeframe, periods);
                     
                     // Clear entry, stop-loss, and take-profit fields
                     $('#entry-price').val('');
@@ -1553,6 +1524,7 @@
                 
                 const currencyPair = $('#currency-pair').val();
                 if (currencyPair) {
+                    logger.logApi('AUTO_FETCH_ATR_PERIODS_CHANGED', { currencyPair, periods, timeframe: globalTimeframe });
                     fetchATR(currencyPair, globalTimeframe, periods);
                 }
             });
