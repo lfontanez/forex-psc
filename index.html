@@ -618,7 +618,7 @@
                     <div class="tab-pane fade" id="sl-atr" role="tabpanel" aria-labelledby="sl-atr-tab">
                         <div class="row mb-3 mt-3">
                             <div class="col-md-12">
-                                <p>Using ATR-based stop loss: <span id="atr-sl-value" class="fw-bold">0.0</span> pips</p>
+                                <p>Using ATR-based stop loss: <span id="atr-sl-value" class="fw-bold">- pips</span></p>
                                 <p class="text-muted small">Stop loss is calculated as: Current ATR × ATR Multiplier</p>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" id="update-atr-sl-btn">
                                     Recalculate ATR Stop Loss
@@ -1234,7 +1234,7 @@
                 
                 // Update displays with one decimal place
                 $('#sl-atr-pips').text(slPips.toFixed(1) + ' pips');
-                $('#atr-sl-value').text(slPips.toFixed(1));
+                $('#atr-sl-value').text(slPips.toFixed(1) + ' pips');
                 
                 // Store for calculations
                 currentATR = atrValue;
