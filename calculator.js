@@ -107,7 +107,7 @@ class MetaAPIService {
     }
 
     // Get historical data for ATR calculation using REST API
-    async getHistoricalData(symbol, timeframe, startTime, limit = 100) {
+    async getHistoricalData(symbol, timeframe, startTime = null, limit = 100) {
         if (!this.config.apiKey || !this.config.accountId) {
             throw new Error('MetaAPI not initialized. Please connect first.');
         }
@@ -116,10 +116,13 @@ class MetaAPIService {
             const mtTimeframe = this.convertTimeframe(timeframe);
             console.log(`Fetching ${limit} candles for ${symbol} on ${mtTimeframe} via REST API...`);
             
-            // Format startTime as ISO string
-            const startTimeISO = startTime instanceof Date ? startTime.toISOString() : new Date(startTime).toISOString();
+            // Build URL - only include startTime if provided
+            let url = `https://mt-market-data-client-api-v1.${this.config.region}.agiliumtrade.ai/users/current/accounts/${this.config.accountId}/historical-market-data/symbols/${symbol}/timeframes/${mtTimeframe}/candles?limit=${limit}`;
             
-            const url = `https://mt-market-data-client-api-v1.${this.config.region}.agiliumtrade.ai/users/current/accounts/${this.config.accountId}/historical-market-data/symbols/${symbol}/timeframes/${mtTimeframe}/candles?startTime=${encodeURIComponent(startTimeISO)}&limit=${limit}`;
+            if (startTime) {
+                const startTimeISO = startTime instanceof Date ? startTime.toISOString() : new Date(startTime).toISOString();
+                url += `&startTime=${encodeURIComponent(startTimeISO)}`;
+            }
             
             const candles = await this.makeRestRequest(url);
             
@@ -198,17 +201,16 @@ class MetaAPIService {
         try {
             console.log(`Fetching ATR for ${symbol} (${timeframe}, ${periods} periods)...`);
             
-            // Calculate how many candles we need - increased buffer for gaps/incomplete candles
-            const candlesNeeded = periods + 15; // Larger buffer to account for gaps
-            const timeframeMs = this.getTimeframeMilliseconds(timeframe);
-            const startTime = new Date(Date.now() - candlesNeeded * timeframeMs);
+            // Request 100 latest candles (well above the maximum we need)
+            // Don't specify startTime to get the most recent candles
+            const candlesRequested = 100;
             
-            console.log(`Requesting ${candlesNeeded} candles for ATR calculation (need minimum ${periods + 1})...`);
+            console.log(`Requesting ${candlesRequested} latest candles for ATR calculation (need minimum ${periods + 1})...`);
             
-            // Get historical data
-            const candles = await this.getHistoricalData(symbol, timeframe, startTime, candlesNeeded);
+            // Get historical data - no startTime parameter to get latest candles
+            const candles = await this.getHistoricalData(symbol, timeframe, null, candlesRequested);
             
-            console.log(`Received ${candles.length} candles (requested ${candlesNeeded}, minimum needed ${periods + 1})`);
+            console.log(`Received ${candles.length} candles (requested ${candlesRequested}, minimum needed ${periods + 1})`);
             
             // More lenient check - we just need enough for ATR calculation
             if (candles.length < periods + 1) {
