@@ -1186,15 +1186,15 @@
                 
                 // Convert ATR to pips
                 const atrPips = atrValue / pipSize;
-                const tpPips = Math.round(atrPips * tpAtrMultiplier); // Round to integer
+                const tpPips = atrPips * tpAtrMultiplier;
                 
                 logger.logCalculation('CALCULATE_TP_ATR_CALCULATION', 
                     { atrValue, tpAtrMultiplier, pipSize, atrPips }, 
                     { tpPips }
                 );
                 
-                // Update the take profit pips field
-                $('#take-profit-pips').val(tpPips);
+                // Update the take profit pips field with one decimal place
+                $('#take-profit-pips').val(tpPips.toFixed(1));
                 
                 // Trigger change to update take profit price
                 $('#take-profit-pips').trigger('change');
@@ -1733,8 +1733,8 @@
                     return;
                 }
                 
-                // Calculate take profit pips based on risk-reward ratio and round to integer
-                const takeProfitPips = Math.round(actualStopLossPips * riskRewardRatio);
+                // Calculate take profit pips based on risk-reward ratio
+                const takeProfitPips = actualStopLossPips * riskRewardRatio;
                 
                 logger.logCalculation('CALCULATE_TP_FROM_RR_TP_PIPS_CALCULATED', 
                     { actualStopLossPips, riskRewardRatio },
@@ -1757,15 +1757,15 @@
                     { takeProfitPrice }
                 );
                 
-                // Update the take profit fields
-                $('#take-profit-pips').val(takeProfitPips);
+                // Update the take profit fields with one decimal place
+                $('#take-profit-pips').val(takeProfitPips.toFixed(1));
                 $('#take-profit-price').val(takeProfitPrice.toFixed(pipDecimalPlaces));
                 
                 // Switch to the price/pips tab to show the results
                 $('#tp-price-tab').tab('show');
                 
                 logger.logCalculation('CALCULATE_TP_FROM_RR_COMPLETED', {
-                    takeProfitPips: takeProfitPips,
+                    takeProfitPips: takeProfitPips.toFixed(1),
                     takeProfitPrice: takeProfitPrice.toFixed(pipDecimalPlaces)
                 });
             }
@@ -2294,11 +2294,11 @@
                 $('#position-size-units').text(Math.round(positionSizeUnits).toLocaleString());
                 $('#risk-amount').text(`${accountCurrency} ${actualRiskAmount.toFixed(2)}`);
                 $('#pip-value').text(`${accountCurrency} ${(pipValueInAccountCurrency * selectedLotRatio * adjustedPositionSizeInLots).toFixed(2)}`);
-                $('#stop-loss-distance').text(`${stopLossPips} pips`);
+                $('#stop-loss-distance').text(`${stopLossPips.toFixed(1)} pips`);
                 
                 // Display take profit details if available
                 if (!isNaN(takeProfitPips) && takeProfitPips > 0) {
-                    $('#take-profit-distance').text(`${takeProfitPips} pips`);
+                    $('#take-profit-distance').text(`${takeProfitPips.toFixed(1)} pips`);
                     $('#risk-reward-ratio-display').text(riskRewardRatio);
                     $('#potential-profit').text(`${accountCurrency} ${potentialProfit.toFixed(2)}`);
                     $('#potential-profit').addClass('positive');
@@ -2314,8 +2314,8 @@
                     positionSizeUnits: Math.round(positionSizeUnits),
                     riskAmount: actualRiskAmount.toFixed(2),
                     pipValue: (pipValueInAccountCurrency * selectedLotRatio * adjustedPositionSizeInLots).toFixed(2),
-                    stopLossDistance: stopLossPips,
-                    takeProfitDistance: takeProfitPips || 'Not set',
+                    stopLossDistance: stopLossPips.toFixed(1),
+                    takeProfitDistance: takeProfitPips ? takeProfitPips.toFixed(1) : 'Not set',
                     riskRewardRatio: riskRewardRatio,
                     potentialProfit: potentialProfit ? potentialProfit.toFixed(2) : 'Not calculated',
                     timeframe: globalTimeframe
