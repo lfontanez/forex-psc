@@ -198,16 +198,22 @@ class MetaAPIService {
         try {
             console.log(`Fetching ATR for ${symbol} (${timeframe}, ${periods} periods)...`);
             
-            // Calculate how many candles we need
-            const candlesNeeded = periods + 10; // Small buffer
+            // Calculate how many candles we need - increased buffer for gaps/incomplete candles
+            const candlesNeeded = periods + 15; // Larger buffer to account for gaps
             const timeframeMs = this.getTimeframeMilliseconds(timeframe);
             const startTime = new Date(Date.now() - candlesNeeded * timeframeMs);
+            
+            console.log(`Requesting ${candlesNeeded} candles for ATR calculation (need minimum ${periods + 1})...`);
             
             // Get historical data
             const candles = await this.getHistoricalData(symbol, timeframe, startTime, candlesNeeded);
             
+            console.log(`Received ${candles.length} candles (requested ${candlesNeeded}, minimum needed ${periods + 1})`);
+            
+            // More lenient check - we just need enough for ATR calculation
             if (candles.length < periods + 1) {
-                throw new Error(`Need ${periods + 1} candles, got ${candles.length}`);
+                console.warn(`Insufficient candles: got ${candles.length}, need ${periods + 1}`);
+                throw new Error(`Insufficient historical data: received ${candles.length} candles, need at least ${periods + 1} for ATR calculation`);
             }
             
             // Calculate ATR
