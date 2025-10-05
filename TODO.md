@@ -89,6 +89,25 @@ The calculator now uses MetaAPI's REST API instead of WebSocket connections for 
 **Implementation Time**: Completed
 **Status**: ✅ PRODUCTION READY - REST API integration with live market data
 
+### 🔧 Technical Notes
+
+#### Pip Size Calculation Fix (Completed)
+
+**Issue**: ATR values were being converted to pips incorrectly, showing 10x too large (e.g., 572 pips instead of 57.2 pips).
+
+**Root Cause**: Code was using `Math.pow(10, -getPipDecimalPlaces())` which confuses display precision with pip size:
+- For EUR/USD: `Math.pow(10, -5) = 0.00001` (wrong)
+- Correct pip size: `0.0001` (4th decimal place)
+
+**Solution**: Created separate `getPipSize()` function that returns actual pip sizes:
+- Standard pairs: 0.0001 (4th decimal)
+- JPY pairs: 0.01 (2nd decimal)
+- Gold: 0.01 (2nd decimal)
+
+**Impact**: All ATR-to-pips conversions now accurate across all currency pairs.
+
+**Documentation**: See README.md "Pip Size Calculation" and CONVENTIONS.md "Calculation Functions"
+
 ### 🎯 Current Status: REST API INTEGRATION
 
 The calculator is now production-ready with MetaAPI REST API:
