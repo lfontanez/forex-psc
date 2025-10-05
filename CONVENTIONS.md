@@ -62,6 +62,41 @@ class ExampleService {
 }
 ```
 
+### Calculation Functions
+
+#### Pip Size Functions
+
+The calculator uses two distinct functions for pip-related operations:
+
+**`getPipDecimalPlaces(currencyPair)`**
+- **Purpose**: Returns decimal places for price display formatting
+- **Returns**: 
+  - JPY pairs: 3 (displays as 143.972)
+  - Gold (XAUUSD): 2 (displays as 2450.00)
+  - Standard pairs: 5 (displays as 1.12345)
+- **Usage**: Formatting prices for display only
+- **Example**: `price.toFixed(getPipDecimalPlaces(currencyPair))`
+
+**`getPipSize(currencyPair)`**
+- **Purpose**: Returns actual pip size for calculations
+- **Returns**:
+  - JPY pairs: 0.01 (1 pip = 2nd decimal place)
+  - Gold (XAUUSD): 0.01 (1 pip = 2nd decimal place)
+  - Standard pairs: 0.0001 (1 pip = 4th decimal place)
+- **Usage**: All pip calculations (SL, TP, ATR conversion, position sizing)
+- **Example**: `const pips = priceDistance / getPipSize(currencyPair)`
+
+**Critical Note**: Never use `Math.pow(10, -getPipDecimalPlaces())` for pip calculations. This confuses display precision with pip size and produces incorrect results (10x too large for standard pairs).
+
+#### ATR Conversion
+
+ATR values from MetaAPI are in price units and must be converted to pips:
+```javascript
+const atrValue = 0.00286; // EUR/USD ATR in price units
+const pipSize = getPipSize('EURUSD'); // 0.0001
+const atrInPips = atrValue / pipSize; // 28.6 pips
+```
+
 ## 🚀 Deployment Considerations
 
 
