@@ -240,20 +240,20 @@ class MetaAPIService {
             
             console.log(`Received ${candles.length} candles (requested ${candlesRequested}, minimum needed ${periods + 1})`);
             
-            // Remove the last candle as it's incomplete - MT4 ATR only uses completed candles
-            // MetaAPI returns candles including the current incomplete candle, but MT4's ATR calculation
-            // only uses completed historical candles to ensure accuracy and consistency
-            const completedCandles = candles.slice(0, -1);
-            console.log(`Excluding most recent incomplete candle, using ${completedCandles.length} completed candles`);
+            // MetaAPI returns completed historical candles (not including the current forming candle)
+            // We use all returned candles to match MT4's ATR calculation behavior
+            // MT4's ATR uses the most recently completed candle as the latest data point
+            const historicalCandles = candles;
+            console.log(`Using all ${historicalCandles.length} historical candles for ATR calculation`);
             
-            // More lenient check - we just need enough for ATR calculation
-            if (completedCandles.length < periods + 1) {
-                console.warn(`Insufficient completed candles: got ${completedCandles.length}, need ${periods + 1}`);
-                throw new Error(`Insufficient historical data: received ${completedCandles.length} completed candles, need at least ${periods + 1} for ATR calculation`);
+            // Check we have enough candles for ATR calculation
+            if (historicalCandles.length < periods + 1) {
+                console.warn(`Insufficient historical candles: got ${historicalCandles.length}, need ${periods + 1}`);
+                throw new Error(`Insufficient historical data: received ${historicalCandles.length} candles, need at least ${periods + 1} for ATR calculation`);
             }
             
-            // Calculate ATR using only completed candles
-            const atr = this.calculateATR(completedCandles, periods);
+            // Calculate ATR using all historical candles to match MT4 behavior
+            const atr = this.calculateATR(historicalCandles, periods);
             console.log(`ATR calculated: ${atr}`);
             
             return atr;
