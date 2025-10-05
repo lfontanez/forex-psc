@@ -1861,7 +1861,7 @@
                 const formatted = formatRate(rate, currencyPair);
                 const bidFormatted = formatRate(priceData.bid, currencyPair);
                 const askFormatted = formatRate(priceData.ask, currencyPair);
-                const spreadPips = ((priceData.ask - priceData.bid) / Math.pow(10, -getPipDecimalPlaces(currencyPair))).toFixed(1);
+                const spreadPips = ((priceData.ask - priceData.bid) / getPipSize(currencyPair)).toFixed(1);
                 
                 $('#current-rate').html(`
                     <div>${formatted} <small class="text-muted">(Mid)</small></div>
