@@ -108,6 +108,18 @@ The calculator now uses MetaAPI's REST API instead of WebSocket connections for 
 
 **Documentation**: See README.md "Pip Size Calculation" and CONVENTIONS.md "Calculation Functions"
 
+#### ATR Candle Alignment Fix (Completed)
+
+**Issue**: ATR calculations were lagging by 2 candles instead of 1, causing values to not match MetaTrader4.
+
+**Root Cause**: The code was removing the last candle with `slice(0, -1)` before passing to `calculateATR()`, which already starts its True Range loop at index 1. This double-exclusion caused a 2-candle lag.
+
+**Solution**: Removed the `slice(0, -1)` operation. MetaAPI returns completed historical candles (not including the current forming candle), so we now use all returned candles to match MT4's behavior exactly.
+
+**Impact**: ATR now calculated from the most recently completed candle, matching MT4 values precisely.
+
+**Files Changed**: calculator.js (getATR method, lines 243-256)
+
 ### 🎯 Current Status: REST API INTEGRATION
 
 The calculator is now production-ready with MetaAPI REST API:
