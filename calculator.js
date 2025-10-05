@@ -164,33 +164,61 @@ class MetaAPIService {
     }
 
     // Calculate ATR from historical data
+    // Uses Simple Moving Average (SMA) of True Range - standard MT4 calculation
     calculateATR(candles, periods = 14) {
         if (candles.length < periods + 1) {
-            throw new Error(`Need ${periods + 1} candles for ATR`);
+            throw new Error(`Need ${periods + 1} candles for ATR calculation`);
         }
+        
+        // Sort candles by time to ensure correct chronological order (oldest to newest)
+        const sortedCandles = [...candles].sort((a, b) => {
+            const timeA = new Date(a.time).getTime();
+            const timeB = new Date(b.time).getTime();
+            return timeA - timeB;
+        });
+        
+        console.log(`ATR Calculation: Using ${sortedCandles.length} candles, calculating for last ${periods} periods`);
+        console.log(`First candle time: ${sortedCandles[0].time}`);
+        console.log(`Last candle time: ${sortedCandles[sortedCandles.length - 1].time}`);
         
         const trueRanges = [];
         
-        // Calculate True Range for each candle
-        for (let i = 1; i < candles.length; i++) {
-            const curr = candles[i];
-            const prev = candles[i - 1];
+        // Calculate True Range for each candle (starting from index 1)
+        // TR = max(high - low, |high - prev_close|, |low - prev_close|)
+        for (let i = 1; i < sortedCandles.length; i++) {
+            const curr = sortedCandles[i];
+            const prev = sortedCandles[i - 1];
             
-            const tr = Math.max(
-                curr.high - curr.low,
-                Math.abs(curr.high - prev.close),
-                Math.abs(curr.low - prev.close)
-            );
+            const highLow = curr.high - curr.low;
+            const highPrevClose = Math.abs(curr.high - prev.close);
+            const lowPrevClose = Math.abs(curr.low - prev.close);
+            
+            const tr = Math.max(highLow, highPrevClose, lowPrevClose);
             
             trueRanges.push(tr);
+            
+            // Log details for the most recent candles
+            if (i >= sortedCandles.length - periods) {
+                console.log(`TR[${i}]: ${tr.toFixed(5)} (H-L: ${highLow.toFixed(5)}, H-PC: ${highPrevClose.toFixed(5)}, L-PC: ${lowPrevClose.toFixed(5)})`);
+            }
         }
         
-        // Average the most recent 'periods' true ranges
+        // Use the most recent 'periods' true ranges (last N values)
+        // This ensures we're calculating ATR from the newest data
         const recentTR = trueRanges.slice(-periods);
-        const atr = recentTR.reduce((a, b) => a + b, 0) / periods;
+        
+        console.log(`Using last ${recentTR.length} True Range values for ATR calculation`);
+        console.log(`True Ranges: ${recentTR.map(tr => tr.toFixed(5)).join(', ')}`);
+        
+        // Calculate Simple Moving Average of True Range
+        const sumTR = recentTR.reduce((sum, tr) => sum + tr, 0);
+        const atr = sumTR / periods;
+        
+        console.log(`Sum of True Ranges: ${sumTR.toFixed(5)}`);
+        console.log(`ATR (${periods} periods): ${atr.toFixed(5)}`);
         
         if (!isFinite(atr) || atr <= 0) {
-            throw new Error('Invalid ATR calculated');
+            throw new Error('Invalid ATR calculated - result is not a valid positive number');
         }
         
         return atr;
