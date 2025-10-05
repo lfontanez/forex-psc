@@ -128,6 +128,40 @@ The calculator uses a robust fallback system:
 - **Fallback ATR**: Simulated values when live data unavailable
 - **Manual Override**: Users can enter ATR values manually
 
+## Pip Size Calculation
+
+The calculator uses precise pip size definitions for accurate position sizing:
+
+### Pip Size vs Decimal Places
+
+**Important distinction:**
+- **Decimal Places**: Used for price display formatting
+- **Pip Size**: Used for calculations (stop loss, take profit, ATR conversion)
+
+### Pip Size by Currency Type
+
+- **Standard Forex Pairs** (EUR/USD, GBP/USD, etc.):
+  - Display: 5 decimal places (1.12345)
+  - Pip Size: 0.0001 (4th decimal place)
+  - The 5th decimal is a "pipette" or fractional pip
+
+- **JPY Pairs** (USD/JPY, EUR/JPY, etc.):
+  - Display: 3 decimal places (143.972)
+  - Pip Size: 0.01 (2nd decimal place)
+  - The 3rd decimal is a fractional pip
+
+- **Gold (XAU/USD)**:
+  - Display: 2 decimal places (2450.00)
+  - Pip Size: 0.01 (2nd decimal place)
+
+### ATR to Pips Conversion
+
+When converting ATR values to pips, the calculator uses the correct pip size:
+- ATR value (e.g., 0.00286 for EUR/USD) ÷ Pip Size (0.0001) = 28.6 pips
+- With ATR multiplier of 2: 28.6 × 2 = 57.2 pips for stop loss
+
+This ensures accurate risk management calculations across all currency pairs.
+
 ## Supported Currency Pairs
 
 Major pairs, crosses, and commodities:
