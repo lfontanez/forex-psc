@@ -555,7 +555,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="sl-based-on-atr" id="sl-atr-info">
-                                Stop Loss based on ATR: <span id="sl-atr-pips">- pips</span>
+                                Stop Loss based on ATR: <span id="sl-atr-pips">-</span> pips
                             </div>
                         </div>
                     </div>
@@ -1233,7 +1233,7 @@
                 );
                 
                 // Update displays with one decimal place
-                $('#sl-atr-pips').text(slPips.toFixed(1) + ' pips');
+                $('#sl-atr-pips').text(slPips.toFixed(1));
                 $('#atr-sl-value').text(slPips.toFixed(1) + ' pips');
                 
                 // Store for calculations
