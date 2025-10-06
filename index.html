@@ -2385,7 +2385,7 @@
             }
 
             // Auto-populate MetaAPI credentials on page load
-            function autoPopulateCredentials() {
+            async function autoPopulateCredentials() {
                 try {
                     let apiKey = '';
                     let accountId = '';
@@ -2442,13 +2442,48 @@
                         logger.logApi('METAAPI_REGION_AUTO_POPULATED', { source, region });
                     }
                     
-                    // If both credentials are available, show a helpful message
+                    // If both credentials are available, auto-initialize MetaAPI
                     if (apiKey && accountId) {
-                        $('#metaapi-status').show().removeClass('alert-danger').addClass('alert-success');
+                        console.log('Credentials ready for auto-initialization from', source);
+                        logger.logApi('METAAPI_AUTO_INIT_STARTED', { hasApiKey: !!apiKey, hasAccountId: !!accountId, source });
+                        
+                        // Update UI to show auto-initializing state
+                        const $btn = $('#metaapi-connect-btn');
+                        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Auto-initializing...');
+                        $('#metaapi-status').show().removeClass('alert-success alert-danger alert-warning').addClass('alert-info');
                         const sourceText = source === 'localStorage' ? 'saved credentials' : 'configuration';
-                        $('#metaapi-status-text').text(`Credentials loaded from ${sourceText}. Click "Initialize MetaAPI" to establish connection.`);
-                        console.log('Credentials ready for connection from', source);
-                        logger.logApi('METAAPI_CREDENTIALS_READY', { hasApiKey: !!apiKey, hasAccountId: !!accountId, source });
+                        $('#metaapi-status-text').text(`Auto-initializing MetaAPI with ${sourceText}...`);
+                        
+                        try {
+                            // Initialize MetaAPI (simple connection, no sync wait)
+                            await metaAPIService.initialize(apiKey, accountId, region);
+                            
+                            // Update UI for successful initialization
+                            metaAPIInitialized = true;
+                            $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> MetaAPI Ready');
+                            $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
+                            $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> MetaAPI auto-initialized successfully! Data will be fetched on-demand when needed.');
+                            
+                            logger.logApi('METAAPI_AUTO_INIT_SUCCESS', { accountId, region, source });
+                            console.log('MetaAPI auto-initialized successfully from', source);
+                            
+                            // Refresh current pair if selected
+                            const currencyPair = $('#currency-pair').val();
+                            if (currencyPair) {
+                                fetchForexRate(currencyPair, true);
+                            }
+                            
+                        } catch (error) {
+                            // Update UI for failed initialization
+                            metaAPIInitialized = false;
+                            $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
+                            
+                            $('#metaapi-status').removeClass('alert-info').addClass('alert-warning');
+                            $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Auto-initialization failed: ${error.message}. Click "Initialize MetaAPI" to retry.`);
+                            
+                            logger.logError('METAAPI_AUTO_INIT_FAILED', error.message, { accountId, region, source });
+                            console.warn('MetaAPI auto-initialization failed:', error);
+                        }
                     } else {
                         console.log('Missing credentials:', { hasApiKey: !!apiKey, hasAccountId: !!accountId });
                         $('#metaapi-status').show().removeClass('alert-success').addClass('alert-warning');
