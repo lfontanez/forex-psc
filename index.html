@@ -1292,17 +1292,11 @@
                 let accountId = $('#metaapi-account').val().trim();
                 const region = $('#metaapi-region').val();
                     
-                // Try to load from environment variables if fields are empty
+                // Try to load from config file if fields are empty
                 if (!apiKey || !accountId) {
                     try {
-                        // Check if we can access environment variables (Node.js context)
-                        if (typeof process !== 'undefined' && process.env) {
-                            apiKey = apiKey || process.env.METAAPI_API_KEY;
-                            accountId = accountId || process.env.METAAPI_ACCOUNT_ID;
-                        }
-                            
                         // For browser context, try to load from a global config object
-                        // This would be set by a separate config.js file that loads .env values
+                        // This would be set by a separate config.js file
                         if (typeof window !== 'undefined' && window.ENV_CONFIG) {
                             apiKey = apiKey || window.ENV_CONFIG.METAAPI_API_KEY;
                             accountId = accountId || window.ENV_CONFIG.METAAPI_ACCOUNT_ID;
@@ -1311,20 +1305,20 @@
                         // Auto-fill the form fields if we found values
                         if (apiKey && !$('#metaapi-key').val()) {
                             $('#metaapi-key').val(apiKey);
-                            logger.logApi('METAAPI_KEY_LOADED_FROM_ENV', { source: 'environment' });
+                            logger.logApi('METAAPI_KEY_LOADED_FROM_CONFIG', { source: 'config' });
                         }
                         if (accountId && !$('#metaapi-account').val()) {
                             $('#metaapi-account').val(accountId);
-                            logger.logApi('METAAPI_ACCOUNT_LOADED_FROM_ENV', { source: 'environment' });
+                            logger.logApi('METAAPI_ACCOUNT_LOADED_FROM_CONFIG', { source: 'config' });
                         }
                             
                     } catch (error) {
-                        logger.logError('ENV_LOAD_FAILED', error.message);
+                        logger.logError('CONFIG_LOAD_FAILED', error.message);
                     }
                 }
                     
                 if (!apiKey || !accountId) {
-                    alert('Please enter both MetaAPI key and Account ID, or ensure they are set in your .env file');
+                    alert('Please enter both MetaAPI key and Account ID, or ensure they are set in your config.json file');
                     return;
                 }
                     
@@ -2356,20 +2350,13 @@
                     
                     console.log('Checking for credentials...', window.ENV_CONFIG);
                     
-                    // Check if we can access environment variables (Node.js context)
-                    if (typeof process !== 'undefined' && process.env) {
-                        apiKey = process.env.METAAPI_API_KEY || '';
-                        accountId = process.env.METAAPI_ACCOUNT_ID || '';
-                        region = process.env.METAAPI_REGION || 'new-york';
-                        console.log('Found Node.js env vars:', { hasApiKey: !!apiKey, hasAccountId: !!accountId });
-                    }
-                    
-                    // For browser context, try to load from a global config object
+                    // Try to load from a global config object
+                    // This would be set by a separate config.js file
                     if (typeof window !== 'undefined' && window.ENV_CONFIG) {
-                        apiKey = apiKey || window.ENV_CONFIG.METAAPI_API_KEY || '';
-                        accountId = accountId || window.ENV_CONFIG.METAAPI_ACCOUNT_ID || '';
-                        region = window.ENV_CONFIG.METAAPI_REGION || region;
-                        console.log('Found browser config:', { hasApiKey: !!apiKey, hasAccountId: !!accountId, region });
+                        apiKey = window.ENV_CONFIG.METAAPI_API_KEY || '';
+                        accountId = window.ENV_CONFIG.METAAPI_ACCOUNT_ID || '';
+                        region = window.ENV_CONFIG.METAAPI_REGION || 'new-york';
+                        console.log('Found config:', { hasApiKey: !!apiKey, hasAccountId: !!accountId, region });
                     }
                     
                     // Auto-fill the form fields if we found values
