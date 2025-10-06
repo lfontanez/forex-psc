@@ -10,8 +10,8 @@ async function loadEnvironmentConfig() {
         // In a real deployment, you might load this from a server endpoint
         // that serves environment variables (excluding sensitive ones)
         
-        // For development, try to load from a local .env file via a simple fetch
-        // Note: This requires a server that can serve the .env file or convert it to JSON
+        // For development, configuration can be loaded from config.json
+        // or embedded in HTML meta tags
         
         // Method 1: Try to fetch from a config endpoint (recommended for production)
         // Uncomment if you have a backend API that serves configuration

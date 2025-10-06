@@ -77,7 +77,7 @@ The calculator now uses MetaAPI's REST API instead of WebSocket connections for 
    - Web server with HTTPS (recommended)
 
 2. **Configuration**:
-   - Set MetaAPI credentials in .env or enter manually
+   - Set MetaAPI credentials in config.json or enter manually
    - Ensure MetaTrader account is deployed and running
    - Test connection before going live
 

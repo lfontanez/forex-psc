@@ -2,4 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/remora/public_html/forex-psc/
-    - /usr/bin/rsync -az --delete --exclude='.git' --exclude='.env' --exclude='.well-known' --exclude='cgi-bin' --exclude='tmp' --exclude='logs' --exclude='uploads' --exclude='app/database/database.sqlite' ./ $DEPLOYPATH
+    - /usr/bin/rsync -az --delete --exclude='.git' --exclude='.well-known' --exclude='cgi-bin' --exclude='tmp' --exclude='logs' --exclude='config.json' ./ $DEPLOYPATH
