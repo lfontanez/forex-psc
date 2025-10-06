@@ -65,6 +65,7 @@ Enter credentials directly in the web interface when connecting.
 The calculator automatically saves your MetaAPI credentials to browser localStorage after a successful connection:
 
 - **Automatic Saving**: Credentials are saved immediately after successful MetaAPI initialization
+- **Auto-Initialization**: When credentials are found (from localStorage or config.json), MetaAPI automatically initializes on page load - no need to click the "Initialize MetaAPI" button
 - **Persistent Sessions**: Credentials persist across browser sessions - no need to re-enter them
 - **Easy Management**: Use the "Clear Saved" button in the MetaAPI configuration section to remove stored credentials
 - **Browser-Specific**: localStorage is specific to each browser and device - credentials won't sync across different browsers or devices
@@ -86,10 +87,21 @@ The calculator automatically saves your MetaAPI credentials to browser localStor
 ## How to Use
 
 ### 1. Connect to MetaAPI
+
+**First-time users:**
 - Enter your API key and account ID
 - Select your preferred region
-- Click "Connect to MetaAPI"
+- Click "Initialize MetaAPI"
 - Wait for successful connection confirmation
+- Credentials are automatically saved for future visits
+
+**Return visits:**
+- Page loads and automatically detects saved credentials
+- MetaAPI auto-initializes in the background
+- Connection status appears when ready
+- No manual initialization needed - just start calculating!
+
+**Note**: If auto-initialization fails, you can manually retry by clicking "Initialize MetaAPI" or entering credentials again.
 
 ### 2. Select Trading Parameters
 - Choose your currency pair
