@@ -206,7 +206,7 @@ npm run build         # Copy SDK files to lib directory
 ## Security Notes
 
 - **API Keys**: Never commit real API keys to version control
-- **Browser Storage**: Credentials stored in localStorage are browser-specific and not encrypted. Clear them if using a shared computer using the "Clear Saved" button
+- **Browser Storage**: Credentials are stored in browser localStorage for convenience. They are browser-specific and not encrypted. Always use the "Clear Saved" button when using a shared computer
 - **HTTPS**: Use HTTPS in production for secure API communication
 - **Rate Limiting**: MetaAPI has rate limits - the app handles this gracefully
 
