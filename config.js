@@ -14,13 +14,13 @@ async function loadEnvironmentConfig() {
         // Note: This requires a server that can serve the .env file or convert it to JSON
         
         // Method 1: Try to fetch from a config endpoint (recommended for production)
-        // Commented out for static deployment - uncomment if you have a backend API
+        // Uncomment if you have a backend API that serves configuration
         // try {
         //     const response = await fetch('/api/config');
         //     if (response.ok) {
         //         const config = await response.json();
         //         Object.assign(window.ENV_CONFIG, config);
-        //         console.log('Environment config loaded from API');
+        //         console.log('Configuration loaded from API endpoint');
         //         return;
         //     }
         // } catch (error) {
@@ -33,18 +33,18 @@ async function loadEnvironmentConfig() {
             if (response.ok) {
                 const config = await response.json();
                 Object.assign(window.ENV_CONFIG, config);
-                console.log('Environment config loaded from config.json');
+                console.log('Configuration loaded from config.json');
                 return;
             }
         } catch (error) {
             // config.json not available, continue
         }
         
-        // Method 3: Check if environment variables are embedded in the HTML
+        // Method 3: Check if configuration is embedded in HTML meta tags
         // (This would be done by a build process or server-side rendering)
-        const metaElements = document.querySelectorAll('meta[name^="env-"]');
+        const metaElements = document.querySelectorAll('meta[name^="config-"]');
         metaElements.forEach(meta => {
-            const key = meta.getAttribute('name').replace('env-', '').toUpperCase();
+            const key = meta.getAttribute('name').replace('config-', '').toUpperCase();
             const value = meta.getAttribute('content');
             if (value) {
                 window.ENV_CONFIG[key] = value;
@@ -52,63 +52,14 @@ async function loadEnvironmentConfig() {
         });
         
         if (Object.keys(window.ENV_CONFIG).length > 0) {
-            console.log('Environment config loaded from meta tags');
+            console.log('Configuration loaded from HTML meta tags');
         }
         
-        // Method 4: Try to load from .env file as last resort
-        try {
-            const response = await fetch('./.env');
-            if (response.ok) {
-                const envText = await response.text();
-                console.log('Found .env file, attempting to parse...');
-                
-                // Parse .env file format (KEY=value lines)
-                const lines = envText.split('\n');
-                let foundValues = false;
-                
-                lines.forEach(line => {
-                    // Skip empty lines and comments
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine || trimmedLine.startsWith('#')) {
-                        return;
-                    }
-                    
-                    // Parse KEY=value format
-                    const equalIndex = trimmedLine.indexOf('=');
-                    if (equalIndex > 0) {
-                        const key = trimmedLine.substring(0, equalIndex).trim();
-                        let value = trimmedLine.substring(equalIndex + 1).trim();
-                        
-                        // Remove quotes if present
-                        if ((value.startsWith('"') && value.endsWith('"')) || 
-                            (value.startsWith("'") && value.endsWith("'"))) {
-                            value = value.substring(1, value.length - 1);
-                        }
-                        
-                        // Only store MetaAPI-related keys
-                        if (key === 'METAAPI_API_KEY' || 
-                            key === 'METAAPI_ACCOUNT_ID' || 
-                            key === 'METAAPI_REGION') {
-                            window.ENV_CONFIG[key] = value;
-                            foundValues = true;
-                            console.log(`Loaded ${key} from .env file`);
-                        }
-                    }
-                });
-                
-                if (foundValues) {
-                    console.log('Environment config loaded from .env file');
-                } else {
-                    console.log('.env file found but no MetaAPI credentials detected');
-                }
-            }
-        } catch (error) {
-            // .env file not available or not readable, this is expected in many deployments
-            console.log('.env file not available (this is normal for production deployments)');
-        }
+        // No additional methods - config.json and meta tags are sufficient
+        // .env files are not recommended for browser-based applications
         
     } catch (error) {
-        console.warn('Could not load environment configuration:', error);
+        console.warn('Could not load configuration:', error);
     }
 }
 
