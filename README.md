@@ -41,7 +41,10 @@ A professional web-based calculator that helps traders determine optimal positio
 
 You can configure MetaAPI credentials in several ways:
 
-#### Method 1: Config File
+#### Method 1: Browser Storage (localStorage)
+Credentials are automatically saved to browser localStorage after your first successful connection. This is the most convenient method as credentials persist across browser sessions without needing to re-enter them.
+
+#### Method 2: Config File
 Create a `config.json` file with your credentials:
 
 ```json
@@ -52,10 +55,20 @@ Create a `config.json` file with your credentials:
 }
 ```
 
-#### Method 2: Manual Entry
+#### Method 3: Manual Entry
 Enter credentials directly in the web interface when connecting.
 
-**Note**: The application will automatically try to load credentials from config files first, then fall back to manual entry.
+**Note**: The application will automatically try to load credentials from browser storage first, then config files, then fall back to manual entry.
+
+### Browser Storage
+
+The calculator automatically saves your MetaAPI credentials to browser localStorage after a successful connection:
+
+- **Automatic Saving**: Credentials are saved immediately after successful MetaAPI initialization
+- **Persistent Sessions**: Credentials persist across browser sessions - no need to re-enter them
+- **Easy Management**: Use the "Clear Saved" button in the MetaAPI configuration section to remove stored credentials
+- **Browser-Specific**: localStorage is specific to each browser and device - credentials won't sync across different browsers or devices
+- **Privacy**: Clear stored credentials when using a shared or public computer
 
 ### Supported Regions
 - `new-york` (default)
@@ -193,7 +206,7 @@ npm run build         # Copy SDK files to lib directory
 ## Security Notes
 
 - **API Keys**: Never commit real API keys to version control
-- **Browser Storage**: API keys are stored in memory only, not persisted
+- **Browser Storage**: Credentials stored in localStorage are browser-specific and not encrypted. Clear them if using a shared computer using the "Clear Saved" button
 - **HTTPS**: Use HTTPS in production for secure API communication
 - **Rate Limiting**: MetaAPI has rate limits - the app handles this gracefully
 
