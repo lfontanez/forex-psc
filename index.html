@@ -405,8 +405,11 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-success" id="metaapi-connect-btn">
+                            <button type="button" class="btn btn-success me-2" id="metaapi-connect-btn">
                                 <i class="bi bi-plug"></i> Initialize MetaAPI
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="clear-credentials-btn">
+                                <i class="bi bi-trash"></i> Clear Saved
                             </button>
                         </div>
                     </div>
@@ -1341,6 +1344,18 @@
                     $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> MetaAPI initialized! Data will be fetched on-demand when needed.');
                         
                     logger.logApi('METAAPI_CONNECTION_SUCCESS', { accountId, region });
+                    
+                    // Save credentials to localStorage on successful connection
+                    try {
+                        localStorage.setItem('metaapi_key', apiKey);
+                        localStorage.setItem('metaapi_account', accountId);
+                        localStorage.setItem('metaapi_region', region);
+                        logger.logApi('METAAPI_CREDENTIALS_SAVED_TO_LOCALSTORAGE', { accountId, region });
+                        console.log('MetaAPI credentials saved to localStorage');
+                    } catch (storageError) {
+                        logger.logError('LOCALSTORAGE_SAVE_FAILED', storageError.message);
+                        console.warn('Could not save credentials to localStorage:', storageError);
+                    }
                         
                     // Refresh current pair if selected
                     const currencyPair = $('#currency-pair').val();
@@ -1356,7 +1371,35 @@
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
                     $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Initialization failed: ${error.message}`);
                         
-                    logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region, isCorsError });
+                    logger.logError('METAAPI_CONNECTION_FAILED', error.message, { accountId, region });
+                }
+            });
+
+            // Clear saved credentials button
+            $('#clear-credentials-btn').click(function() {
+                try {
+                    // Clear from localStorage
+                    localStorage.removeItem('metaapi_key');
+                    localStorage.removeItem('metaapi_account');
+                    localStorage.removeItem('metaapi_region');
+                    
+                    // Clear form fields
+                    $('#metaapi-key').val('');
+                    $('#metaapi-account').val('');
+                    $('#metaapi-region').val('new-york');
+                    
+                    // Update status
+                    $('#metaapi-status').show().removeClass('alert-success alert-danger').addClass('alert-warning');
+                    $('#metaapi-status-text').html('<i class="bi bi-info-circle"></i> Saved credentials cleared. Please enter new credentials.');
+                    
+                    logger.logApi('METAAPI_CREDENTIALS_CLEARED', { source: 'localStorage' });
+                    console.log('MetaAPI credentials cleared from localStorage');
+                    
+                    alert('Saved credentials have been cleared.');
+                } catch (error) {
+                    logger.logError('CLEAR_CREDENTIALS_FAILED', error.message);
+                    console.error('Failed to clear credentials:', error);
+                    alert('Failed to clear credentials: ' + error.message);
                 }
             });
 
@@ -2347,41 +2390,65 @@
                     let apiKey = '';
                     let accountId = '';
                     let region = 'new-york';
+                    let source = 'none';
                     
-                    console.log('Checking for credentials...', window.ENV_CONFIG);
+                    console.log('Checking for credentials...');
                     
-                    // Try to load from a global config object
-                    // This would be set by a separate config.js file
-                    if (typeof window !== 'undefined' && window.ENV_CONFIG) {
-                        apiKey = window.ENV_CONFIG.METAAPI_API_KEY || '';
-                        accountId = window.ENV_CONFIG.METAAPI_ACCOUNT_ID || '';
-                        region = window.ENV_CONFIG.METAAPI_REGION || 'new-york';
-                        console.log('Found config:', { hasApiKey: !!apiKey, hasAccountId: !!accountId, region });
+                    // Priority 1: Try to load from localStorage first
+                    try {
+                        const storedKey = localStorage.getItem('metaapi_key');
+                        const storedAccount = localStorage.getItem('metaapi_account');
+                        const storedRegion = localStorage.getItem('metaapi_region');
+                        
+                        if (storedKey && storedAccount) {
+                            apiKey = storedKey;
+                            accountId = storedAccount;
+                            region = storedRegion || 'new-york';
+                            source = 'localStorage';
+                            console.log('Found credentials in localStorage:', { hasApiKey: !!apiKey, hasAccountId: !!accountId, region });
+                        }
+                    } catch (storageError) {
+                        console.warn('localStorage not available:', storageError);
+                        logger.logError('LOCALSTORAGE_READ_FAILED', storageError.message);
+                    }
+                    
+                    // Priority 2: Try to load from config file if not found in localStorage
+                    if (!apiKey || !accountId) {
+                        if (typeof window !== 'undefined' && window.ENV_CONFIG) {
+                            apiKey = apiKey || window.ENV_CONFIG.METAAPI_API_KEY || '';
+                            accountId = accountId || window.ENV_CONFIG.METAAPI_ACCOUNT_ID || '';
+                            region = region || window.ENV_CONFIG.METAAPI_REGION || 'new-york';
+                            if (apiKey && accountId) {
+                                source = 'config';
+                                console.log('Found credentials in config:', { hasApiKey: !!apiKey, hasAccountId: !!accountId, region });
+                            }
+                        }
                     }
                     
                     // Auto-fill the form fields if we found values
                     if (apiKey) {
                         $('#metaapi-key').val(apiKey);
-                        console.log('Auto-populated API key');
-                        logger.logApi('METAAPI_KEY_AUTO_POPULATED', { source: 'config' });
+                        console.log('Auto-populated API key from', source);
+                        logger.logApi('METAAPI_KEY_AUTO_POPULATED', { source });
                     }
                     if (accountId) {
                         $('#metaapi-account').val(accountId);
-                        console.log('Auto-populated Account ID');
-                        logger.logApi('METAAPI_ACCOUNT_AUTO_POPULATED', { source: 'config' });
+                        console.log('Auto-populated Account ID from', source);
+                        logger.logApi('METAAPI_ACCOUNT_AUTO_POPULATED', { source });
                     }
                     if (region) {
                         $('#metaapi-region').val(region);
-                        console.log('Auto-populated region:', region);
-                        logger.logApi('METAAPI_REGION_AUTO_POPULATED', { source: 'config', region });
+                        console.log('Auto-populated region from', source, ':', region);
+                        logger.logApi('METAAPI_REGION_AUTO_POPULATED', { source, region });
                     }
                     
                     // If both credentials are available, show a helpful message
                     if (apiKey && accountId) {
                         $('#metaapi-status').show().removeClass('alert-danger').addClass('alert-success');
-                        $('#metaapi-status-text').text('Credentials loaded from configuration. Click "Connect to MetaAPI" to establish connection.');
-                        console.log('Credentials ready for connection');
-                        logger.logApi('METAAPI_CREDENTIALS_READY', { hasApiKey: !!apiKey, hasAccountId: !!accountId });
+                        const sourceText = source === 'localStorage' ? 'saved credentials' : 'configuration';
+                        $('#metaapi-status-text').text(`Credentials loaded from ${sourceText}. Click "Initialize MetaAPI" to establish connection.`);
+                        console.log('Credentials ready for connection from', source);
+                        logger.logApi('METAAPI_CREDENTIALS_READY', { hasApiKey: !!apiKey, hasAccountId: !!accountId, source });
                     } else {
                         console.log('Missing credentials:', { hasApiKey: !!apiKey, hasAccountId: !!accountId });
                         $('#metaapi-status').show().removeClass('alert-success').addClass('alert-warning');
