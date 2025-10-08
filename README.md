@@ -242,7 +242,9 @@ npm run build         # Copy SDK files to lib directory
 
 ## License
 
-MIT License - see LICENSE file for details
+This project is licensed under the R1Software Community License (R1SCL) v1.0 - see the [LICENSE](LICENSE) file for details.
+
+**TL;DR**: Free to use, modify, and share. Just don't sell it as-a-service without permission.
 
 ## Support
 
