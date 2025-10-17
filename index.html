@@ -2927,6 +2927,24 @@
                 logger.logCalculation('TP_RATIO_SYNCED', { tpRatio });
             });
             
+            // Sync timeframe changes from settings modal to main form
+            $('#settings-global-timeframe').on('change', function() {
+                const newTimeframe = $(this).val();
+                
+                // Update main form timeframe buttons
+                $('.timeframe-option').removeClass('active');
+                $(`.timeframe-option[data-timeframe="${newTimeframe}"]`).addClass('active');
+                
+                // Update global variable
+                globalTimeframe = newTimeframe;
+                
+                // Update timeframe display
+                const timeframeText = $(`.timeframe-option[data-timeframe="${newTimeframe}"]`).text();
+                $('#atr-timeframe-display').text(timeframeText + ' timeframe');
+                
+                logger.logCalculation('TIMEFRAME_SYNCED_FROM_SETTINGS', { newTimeframe });
+            });
+            
             // Auto-populate MetaAPI credentials on page load
             async function autoPopulateCredentials() {
                 try {
