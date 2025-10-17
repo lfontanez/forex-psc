@@ -979,6 +979,8 @@
                     default_atr_periods: 14,
                     default_lot_size: 'standard',
                     global_timeframe: '4h',
+                    default_sl_multiplier: 2.0,
+                    default_tp_ratio: 2.0,
                     
                     // UI Preferences
                     auto_initialize_metaapi: true,
@@ -994,7 +996,7 @@
                         const stored = localStorage.getItem(`forex_calc_${key}`);
                         if (stored !== null) {
                             // Parse numbers and booleans appropriately
-                            if (key === 'account_size' || key === 'risk_percentage' || key === 'default_atr_periods') {
+                            if (key === 'account_size' || key === 'risk_percentage' || key === 'default_atr_periods' || key === 'default_sl_multiplier' || key === 'default_tp_ratio') {
                                 settings[key] = parseFloat(stored);
                             } else if (key === 'auto_initialize_metaapi' || key === 'show_debug_info') {
                                 settings[key] = stored === 'true';
@@ -1041,6 +1043,8 @@
                     $('#atr-periods').val(settings.default_atr_periods);
                     $('#default-atr-periods').val(settings.default_atr_periods);
                     $('#default-risk-percentage').val(settings.risk_percentage);
+                    $('#atr-multiplier').val(settings.default_sl_multiplier);
+                    $('#risk-reward-ratio-input').val(settings.default_tp_ratio);
                     
                     // Lot Size Selection
                     $('.lot-option').removeClass('active');
@@ -1076,6 +1080,8 @@
                         default_atr_periods: parseInt($('#default-atr-periods').val()) || this.defaultSettings.default_atr_periods,
                         default_lot_size: selectedLotSize || this.defaultSettings.default_lot_size,
                         global_timeframe: globalTimeframe || this.defaultSettings.global_timeframe,
+                        default_sl_multiplier: parseFloat($('#atr-multiplier').val()) || this.defaultSettings.default_sl_multiplier,
+                        default_tp_ratio: parseFloat($('#risk-reward-ratio-input').val()) || this.defaultSettings.default_tp_ratio,
                         
                         // UI Preferences
                         auto_initialize_metaapi: true, // Always true for now
