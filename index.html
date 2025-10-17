@@ -2086,8 +2086,41 @@
                 
                 logger.logCalculation('TP_INPUT_VALUES', { takeProfitPrice, takeProfitPips });
                 
+                // If ATR-based take profit is active, use that
+                if ($('#tp-atr-tab').hasClass('active')) {
+                    const atrValue = parseFloat($('#atr-value').val());
+                    const tpAtrMultiplier = parseFloat($('#tp-atr-multiplier').val());
+                    
+                    logger.logCalculation('USING_ATR_BASED_TP', { atrValue, tpAtrMultiplier });
+                    
+                    if (!isNaN(atrValue) && !isNaN(tpAtrMultiplier)) {
+                        // Calculate ATR-based take profit in pips
+                        const pipSize = getPipSize(currencyPair);
+                        
+                        // Convert ATR to pips
+                        const atrPips = atrValue / pipSize;
+                        takeProfitPips = Math.round(atrPips * tpAtrMultiplier); // Ensure integer
+                        
+                        logger.logCalculation('ATR_TP_CALCULATION', 
+                            { atrValue, tpAtrMultiplier, pipSize, atrPips },
+                            { takeProfitPips }
+                        );
+                        
+                        // Calculate take profit price
+                        if (tradeDirection === 'buy') {
+                            takeProfitPrice = entryPrice + (takeProfitPips * pipSize);
+                        } else {
+                            takeProfitPrice = entryPrice - (takeProfitPips * pipSize);
+                        }
+                        
+                        logger.logCalculation('ATR_TP_PRICE_CALCULATION', 
+                            { entryPrice, takeProfitPips, pipSize, tradeDirection },
+                            { takeProfitPrice }
+                        );
+                    }
+                }
                 // If take profit price is not provided, calculate it from pips
-                if (isNaN(takeProfitPrice) && !isNaN(takeProfitPips)) {
+                else if (isNaN(takeProfitPrice) && !isNaN(takeProfitPips)) {
                     const pipSize = getPipSize(currencyPair);
                     
                     if (tradeDirection === 'buy') {
