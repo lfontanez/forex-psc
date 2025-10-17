@@ -1096,7 +1096,7 @@
                         // Calculator Preferences
                         default_atr_periods: parseInt($('#default-atr-periods').val()) || this.defaultSettings.default_atr_periods,
                         default_lot_size: selectedLotSize || this.defaultSettings.default_lot_size,
-                        global_timeframe: globalTimeframe || this.defaultSettings.global_timeframe,
+                        global_timeframe: $('#settings-global-timeframe').val() || this.defaultSettings.global_timeframe,
                         default_sl_multiplier: parseFloat($('#settings-default-sl-multiplier').val()) || this.defaultSettings.default_sl_multiplier,
                         default_tp_ratio: parseFloat($('#settings-default-tp-ratio').val()) || this.defaultSettings.default_tp_ratio,
                         
