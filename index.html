@@ -328,6 +328,56 @@
             margin-top: 0.5rem;
             font-style: italic;
         }
+        .header-icons {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .header-icon {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+        .header-icon:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .metaapi-status-icon {
+            position: relative;
+        }
+        .metaapi-status-icon.connected {
+            color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+            border-color: #28a745;
+        }
+        .metaapi-status-icon.disconnected {
+            color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.1);
+            border-color: #dc3545;
+        }
+        .metaapi-status-icon.connecting {
+            color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107;
+        }
+        .header {
+            position: relative;
+        }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -349,6 +399,14 @@
 <body>
     <div class="calculator-container">
         <div class="header">
+            <div class="header-icons">
+                <div class="header-icon" id="settings-icon" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Settings">
+                    <i class="bi bi-gear-fill"></i>
+                </div>
+                <div class="header-icon metaapi-status-icon" id="metaapi-status-icon" style="display: none;" title="MetaAPI Status">
+                    <i class="bi bi-wifi"></i>
+                </div>
+            </div>
             <h1>Forex Position Size Calculator</h1>
             <p class="lead">Calculate the optimal position size based on your risk management settings</p>
         </div>
@@ -764,6 +822,28 @@
             <button type="button" class="toggle-logs-btn" id="toggle-logs-btn">Show Activity Logs</button>
             <div class="log-container" id="log-container" style="display: none;">
                 <div id="log-entries"></div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="settingsModalLabel">
+                            <i class="bi bi-gear-fill me-2"></i>Settings
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Settings content will be populated here -->
+                        <p class="text-muted">Settings panel will be implemented in the next step.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="save-settings-btn">Save Changes</button>
+                    </div>
+                </div>
             </div>
         </div>
 
