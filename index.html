@@ -1071,6 +1071,7 @@
                     $('.timeframe-option').removeClass('active');
                     $(`.timeframe-option[data-timeframe="${settings.global_timeframe}"]`).addClass('active');
                     globalTimeframe = settings.global_timeframe;
+                    $('#settings-global-timeframe').val(settings.global_timeframe);
                     
                     // Update account currency symbols
                     $('.account-currency-symbol').text(settings.account_currency);
