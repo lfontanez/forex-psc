@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings Test</title>
+</head>
+<body>
+    <h1>Settings Persistence Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        // Test localStorage operations
+        function testSettings() {
+            const output = document.getElementById('output');
+            let results = [];
+            
+            // Test 1: Clear any existing settings
+            results.push('<h2>Test 1: Clear existing settings</h2>');
+            localStorage.removeItem('forex_calc_metaapi_key');
+            localStorage.removeItem('forex_calc_account_size');
+            localStorage.removeItem('forex_calc_risk_percentage');
+            results.push('✓ Cleared existing settings');
+            
+            // Test 2: Save settings
+            results.push('<h2>Test 2: Save settings</h2>');
+            localStorage.setItem('forex_calc_metaapi_key', 'test_key_123');
+            localStorage.setItem('forex_calc_account_size', '25000');
+            localStorage.setItem('forex_calc_risk_percentage', '1.5');
+            results.push('✓ Saved test settings');
+            
+            // Test 3: Load settings
+            results.push('<h2>Test 3: Load settings</h2>');
+            const loadedKey = localStorage.getItem('forex_calc_metaapi_key');
+            const loadedSize = localStorage.getItem('forex_calc_account_size');
+            const loadedRisk = localStorage.getItem('forex_calc_risk_percentage');
+            
+            results.push(`MetaAPI Key: ${loadedKey} (expected: test_key_123)`);
+            results.push(`Account Size: ${loadedSize} (expected: 25000)`);
+            results.push(`Risk Percentage: ${loadedRisk} (expected: 1.5)`);
+            
+            // Test 4: Verify data types
+            results.push('<h2>Test 4: Data type parsing</h2>');
+            const parsedSize = parseFloat(loadedSize);
+            const parsedRisk = parseFloat(loadedRisk);
+            
+            results.push(`Parsed Account Size: ${parsedSize} (type: ${typeof parsedSize})`);
+            results.push(`Parsed Risk Percentage: ${parsedRisk} (type: ${typeof parsedRisk})`);
+            
+            // Test 5: Check localStorage availability
+            results.push('<h2>Test 5: localStorage availability</h2>');
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                results.push('✓ localStorage is available and working');
+            } catch (e) {
+                results.push(`❌ localStorage error: ${e.message}`);
+            }
+            
+            output.innerHTML = results.join('<br>');
+        }
+        
+        // Run test on page load
+        testSettings();
+    </script>
+</body>
+</html>

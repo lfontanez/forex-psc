@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Settings Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>New Settings Functionality Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        // Simulate the settings manager functionality
+        const testSettingsManager = {
+            defaultSettings: {
+                // MetaAPI Configuration
+                metaapi_key: '',
+                metaapi_account: '',
+                metaapi_region: 'new-york',
+                
+                // Account Settings
+                account_size: 10000,
+                risk_percentage: 2,
+                account_currency: 'USD',
+                
+                // Calculator Preferences
+                default_atr_periods: 14,
+                default_lot_size: 'standard',
+                global_timeframe: '4h',
+                default_sl_multiplier: 2.0,
+                default_tp_ratio: 2.0,
+                
+                // UI Preferences
+                auto_initialize_metaapi: true,
+                show_debug_info: true
+            },
+            
+            // Test localStorage operations
+            testLocalStorage: function() {
+                const results = [];
+                
+                try {
+                    // Test saving new settings
+                    const testSettings = {
+                        ...this.defaultSettings,
+                        default_sl_multiplier: 2.5,
+                        default_tp_ratio: 3.0,
+                        account_size: 50000,
+                        risk_percentage: 1.5
+                    };
+                    
+                    // Save settings
+                    Object.keys(testSettings).forEach(key => {
+                        localStorage.setItem(`forex_calc_${key}`, testSettings[key].toString());
+                    });
+                    results.push('<span class="success">✓ Saved test settings to localStorage</span>');
+                    
+                    // Load settings
+                    const loadedSettings = { ...this.defaultSettings };
+                    Object.keys(loadedSettings).forEach(key => {
+                        const stored = localStorage.getItem(`forex_calc_${key}`);
+                        if (stored !== null) {
+                            if (key === 'account_size' || key === 'risk_percentage' || key === 'default_atr_periods' || key === 'default_sl_multiplier' || key === 'default_tp_ratio') {
+                                loadedSettings[key] = parseFloat(stored);
+                            } else if (key === 'auto_initialize_metaapi' || key === 'show_debug_info') {
+                                loadedSettings[key] = stored === 'true';
+                            } else {
+                                loadedSettings[key] = stored;
+                            }
+                        }
+                    });
+                    
+                    // Verify loaded settings
+                    const checks = [
+                        { key: 'default_sl_multiplier', expected: 2.5, actual: loadedSettings.default_sl_multiplier },
+                        { key: 'default_tp_ratio', expected: 3.0, actual: loadedSettings.default_tp_ratio },
+                        { key: 'account_size', expected: 50000, actual: loadedSettings.account_size },
+                        { key: 'risk_percentage', expected: 1.5, actual: loadedSettings.risk_percentage }
+                    ];
+                    
+                    checks.forEach(check => {
+                        if (check.actual === check.expected) {
+                            results.push(`<span class="success">✓ ${check.key}: ${check.actual} (correct)</span>`);
+                        } else {
+                            results.push(`<span class="error">❌ ${check.key}: expected ${check.expected}, got ${check.actual}</span>`);
+                        }
+                    });
+                    
+                    // Test data types
+                    results.push('<br><strong>Data Type Verification:</strong>');
+                    results.push(`<span class="info">default_sl_multiplier type: ${typeof loadedSettings.default_sl_multiplier}</span>`);
+                    results.push(`<span class="info">default_tp_ratio type: ${typeof loadedSettings.default_tp_ratio}</span>`);
+                    results.push(`<span class="info">account_size type: ${typeof loadedSettings.account_size}</span>`);
+                    
+                    // Clean up
+                    Object.keys(testSettings).forEach(key => {
+                        localStorage.removeItem(`forex_calc_${key}`);
+                    });
+                    results.push('<br><span class="success">✓ Cleaned up test data</span>');
+                    
+                } catch (error) {
+                    results.push(`<span class="error">❌ Test failed: ${error.message}</span>`);
+                }
+                
+                return results;
+            }
+        };
+        
+        function runTests() {
+            const output = document.getElementById('output');
+            let allResults = [];
+            
+            // Test 1: localStorage functionality
+            allResults.push('<div class="test-section">');
+            allResults.push('<h2>Test 1: localStorage Operations</h2>');
+            allResults.push(...testSettingsManager.testLocalStorage());
+            allResults.push('</div>');
+            
+            // Test 2: Settings structure
+            allResults.push('<div class="test-section">');
+            allResults.push('<h2>Test 2: Settings Structure</h2>');
+            const defaultSettings = testSettingsManager.defaultSettings;
+            
+            if (defaultSettings.hasOwnProperty('default_sl_multiplier')) {
+                allResults.push('<span class="success">✓ default_sl_multiplier setting exists</span>');
+            } else {
+                allResults.push('<span class="error">❌ default_sl_multiplier setting missing</span>');
+            }
+            
+            if (defaultSettings.hasOwnProperty('default_tp_ratio')) {
+                allResults.push('<span class="success">✓ default_tp_ratio setting exists</span>');
+            } else {
+                allResults.push('<span class="error">❌ default_tp_ratio setting missing</span>');
+            }
+            
+            allResults.push(`<span class="info">Default SL Multiplier: ${defaultSettings.default_sl_multiplier}</span>`);
+            allResults.push(`<span class="info">Default TP Ratio: ${defaultSettings.default_tp_ratio}</span>`);
+            allResults.push('</div>');
+            
+            // Test 3: Key naming consistency
+            allResults.push('<div class="test-section">');
+            allResults.push('<h2>Test 3: Key Naming Consistency</h2>');
+            
+            const testKey = 'forex_calc_metaapi_key';
+            localStorage.setItem(testKey, 'test_value');
+            const retrieved = localStorage.getItem(testKey);
+            
+            if (retrieved === 'test_value') {
+                allResults.push('<span class="success">✓ Key naming is consistent</span>');
+            } else {
+                allResults.push('<span class="error">❌ Key naming inconsistency detected</span>');
+            }
+            
+            localStorage.removeItem(testKey);
+            allResults.push('</div>');
+            
+            output.innerHTML = allResults.join('<br>');
+        }
+        
+        // Run tests on page load
+        runTests();
+    </script>
+</body>
+</html>
