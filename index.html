@@ -429,7 +429,11 @@
             </div>
 
             <div class="form-section">
-                <div class="form-section-title">Pair &amp; Account Settings</div>
+                <div class="form-section-title">Pair Settings</div>
+                
+                <!-- Hidden fields for account settings (managed in settings modal) -->
+                <input type="hidden" id="account-size" value="10000">
+                <input type="hidden" id="risk-percentage" value="2">
                 
                 <div class="api-selector">
                     <label class="form-label">Rates Data Source:</label>
@@ -438,6 +442,14 @@
                     </div>
                 </div>
 
+                
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Account Settings:</strong> Configure your account size, risk percentage, and currency in the 
+                    <button type="button" class="btn btn-link p-0 align-baseline" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                        <i class="bi bi-gear-fill"></i> Settings
+                    </button> panel.
+                </div>
                 
                 <div class="row mb-3">
                     <div class="col-md-6 mb-3">
@@ -494,22 +506,6 @@
                     <div class="api-credits" id="api-source">Exchange rates provided by MetaAPI (Real-time)</div>
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6 mb-3">
-                        <label for="account-size" class="form-label">Account Size:</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="account-size" min="1" step="1" value="10000" required="">
-                            <span class="input-group-text account-currency-symbol">USD</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="risk-percentage" class="form-label">Risk Percentage:</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="risk-percentage" min="0.1" max="100" step="0.1" value="2" required="">
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="form-section">
@@ -844,6 +840,58 @@
                             </div>
                         </div>
 
+                        <!-- Account Settings Section -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-person-circle me-2"></i>Account Settings
+                            </h6>
+                            <div class="form-section">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="settings-account-size" class="form-label">Account Size:</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="settings-account-size" min="1" step="1" value="10000">
+                                            <span class="input-group-text" id="settings-account-currency-symbol">USD</span>
+                                        </div>
+                                        <small class="text-muted">Your trading account balance</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="settings-risk-percentage" class="form-label">Risk Percentage:</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="settings-risk-percentage" min="0.1" max="100" step="0.1" value="2">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">Percentage of account to risk per trade</small>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="settings-account-currency" class="form-label">Account Currency:</label>
+                                        <select class="form-select" id="settings-account-currency">
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR</option>
+                                            <option value="GBP">GBP</option>
+                                            <option value="JPY">JPY</option>
+                                            <option value="AUD">AUD</option>
+                                            <option value="CAD">CAD</option>
+                                            <option value="CHF">CHF</option>
+                                            <option value="NZD">NZD</option>
+                                        </select>
+                                        <small class="text-muted">Currency of your trading account</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="settings-default-lot-size" class="form-label">Default Lot Size:</label>
+                                        <select class="form-select" id="settings-default-lot-size">
+                                            <option value="standard">Standard (100,000)</option>
+                                            <option value="mini">Mini (10,000)</option>
+                                            <option value="micro">Micro (1,000)</option>
+                                        </select>
+                                        <small class="text-muted">Preferred lot size for calculations</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Additional Settings Sections -->
                         <div class="mb-4">
                             <h6 class="border-bottom pb-2 mb-3">
@@ -868,6 +916,22 @@
                                             <option value="5">5 periods</option>
                                         </select>
                                         <small class="text-muted">Default ATR calculation period</small>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="settings-global-timeframe" class="form-label">Default Timeframe:</label>
+                                        <select class="form-select" id="settings-global-timeframe">
+                                            <option value="1m">1 minute</option>
+                                            <option value="5m">5 minutes</option>
+                                            <option value="15m">15 minutes</option>
+                                            <option value="30m">30 minutes</option>
+                                            <option value="1h">1 hour</option>
+                                            <option value="4h" selected>4 hours</option>
+                                            <option value="8h">8 hours</option>
+                                            <option value="1d">Daily</option>
+                                        </select>
+                                        <small class="text-muted">Default timeframe for ATR and analysis</small>
                                     </div>
                                 </div>
                             </div>
@@ -898,6 +962,211 @@
     <script src="calculator.js"></script>
     <script>
         $(document).ready(function() {
+            // Settings Manager - Comprehensive localStorage management
+            const settingsManager = {
+                defaultSettings: {
+                    // MetaAPI Configuration
+                    metaapi_key: '',
+                    metaapi_account: '',
+                    metaapi_region: 'new-york',
+                    
+                    // Account Settings
+                    account_size: 10000,
+                    risk_percentage: 2,
+                    account_currency: 'USD',
+                    
+                    // Calculator Preferences
+                    default_atr_periods: 14,
+                    default_lot_size: 'standard',
+                    global_timeframe: '4h',
+                    
+                    // UI Preferences
+                    auto_initialize_metaapi: true,
+                    show_debug_info: true
+                },
+                
+                // Load all settings from localStorage
+                loadSettings: function() {
+                    const settings = { ...this.defaultSettings };
+                    
+                    // Load each setting from localStorage
+                    Object.keys(settings).forEach(key => {
+                        const stored = localStorage.getItem(`forex_calc_${key}`);
+                        if (stored !== null) {
+                            // Parse numbers and booleans appropriately
+                            if (key === 'account_size' || key === 'risk_percentage' || key === 'default_atr_periods') {
+                                settings[key] = parseFloat(stored);
+                            } else if (key === 'auto_initialize_metaapi' || key === 'show_debug_info') {
+                                settings[key] = stored === 'true';
+                            } else {
+                                settings[key] = stored;
+                            }
+                        }
+                    });
+                    
+                    logger.logCalculation('SETTINGS_LOADED', {}, settings);
+                    return settings;
+                },
+                
+                // Save a single setting to localStorage
+                saveSetting: function(key, value) {
+                    localStorage.setItem(`forex_calc_${key}`, value.toString());
+                    logger.logCalculation('SETTING_SAVED', { key, value });
+                },
+                
+                // Save all settings to localStorage
+                saveAllSettings: function(settings) {
+                    Object.keys(settings).forEach(key => {
+                        this.saveSetting(key, settings[key]);
+                    });
+                    logger.logCalculation('ALL_SETTINGS_SAVED', {}, settings);
+                },
+                
+                // Apply settings to UI elements
+                applySettingsToUI: function(settings) {
+                    // MetaAPI Settings
+                    $('#metaapi-key').val(settings.metaapi_key);
+                    $('#metaapi-account').val(settings.metaapi_account);
+                    $('#metaapi-region').val(settings.metaapi_region);
+                    
+                    // Account Settings (now in settings modal)
+                    $('#account-size').val(settings.account_size);
+                    $('#risk-percentage').val(settings.risk_percentage);
+                    $('#account-currency').val(settings.account_currency);
+                    $('#settings-account-size').val(settings.account_size);
+                    $('#settings-risk-percentage').val(settings.risk_percentage);
+                    $('#settings-account-currency').val(settings.account_currency);
+                    
+                    // Calculator Preferences
+                    $('#atr-periods').val(settings.default_atr_periods);
+                    $('#default-atr-periods').val(settings.default_atr_periods);
+                    $('#default-risk-percentage').val(settings.risk_percentage);
+                    
+                    // Lot Size Selection
+                    $('.lot-option').removeClass('active');
+                    $(`.lot-option[data-lot-type="${settings.default_lot_size}"]`).addClass('active');
+                    selectedLotSize = settings.default_lot_size;
+                    
+                    // Global Timeframe
+                    $('.timeframe-option').removeClass('active');
+                    $(`.timeframe-option[data-timeframe="${settings.global_timeframe}"]`).addClass('active');
+                    globalTimeframe = settings.global_timeframe;
+                    
+                    // Update account currency symbols
+                    $('.account-currency-symbol').text(settings.account_currency);
+                    
+                    logger.logCalculation('SETTINGS_APPLIED_TO_UI', {}, settings);
+                },
+                
+                // Collect current settings from UI
+                collectSettingsFromUI: function() {
+                    return {
+                        // MetaAPI Configuration
+                        metaapi_key: $('#metaapi-key').val(),
+                        metaapi_account: $('#metaapi-account').val(),
+                        metaapi_region: $('#metaapi-region').val(),
+                        
+                        // Account Settings
+                        account_size: parseFloat($('#settings-account-size').val()) || this.defaultSettings.account_size,
+                        risk_percentage: parseFloat($('#settings-risk-percentage').val()) || this.defaultSettings.risk_percentage,
+                        account_currency: $('#settings-account-currency').val() || this.defaultSettings.account_currency,
+                        
+                        // Calculator Preferences
+                        default_atr_periods: parseInt($('#default-atr-periods').val()) || this.defaultSettings.default_atr_periods,
+                        default_lot_size: selectedLotSize || this.defaultSettings.default_lot_size,
+                        global_timeframe: globalTimeframe || this.defaultSettings.global_timeframe,
+                        
+                        // UI Preferences
+                        auto_initialize_metaapi: true, // Always true for now
+                        show_debug_info: true // Always true for now
+                    };
+                },
+                
+                // Reset all settings to defaults
+                resetToDefaults: function() {
+                    // Clear localStorage
+                    Object.keys(this.defaultSettings).forEach(key => {
+                        localStorage.removeItem(`forex_calc_${key}`);
+                    });
+                    
+                    // Apply defaults to UI
+                    this.applySettingsToUI(this.defaultSettings);
+                    
+                    logger.logCalculation('SETTINGS_RESET_TO_DEFAULTS', {});
+                    return this.defaultSettings;
+                }
+            };
+            
+            // MetaAPI Status Manager
+            const metaAPIStatusManager = {
+                states: {
+                    DISCONNECTED: 'disconnected',
+                    CONNECTING: 'connecting', 
+                    CONNECTED: 'connected'
+                },
+                
+                currentState: 'disconnected',
+                
+                // Update status icon and visibility
+                updateStatus: function(state, message = '') {
+                    this.currentState = state;
+                    const $icon = $('#metaapi-status-icon');
+                    const $statusText = $('#metaapi-status-text');
+                    
+                    // Remove all state classes
+                    $icon.removeClass('connected disconnected connecting');
+                    
+                    // Show/hide icon based on state
+                    if (state === this.states.DISCONNECTED) {
+                        $icon.hide();
+                    } else {
+                        $icon.show().addClass(state);
+                    }
+                    
+                    // Update tooltip
+                    let tooltip = 'MetaAPI Status: ';
+                    switch (state) {
+                        case this.states.CONNECTED:
+                            tooltip += 'Connected';
+                            break;
+                        case this.states.CONNECTING:
+                            tooltip += 'Connecting...';
+                            break;
+                        case this.states.DISCONNECTED:
+                            tooltip += 'Disconnected';
+                            break;
+                    }
+                    
+                    if (message) {
+                        tooltip += ` - ${message}`;
+                    }
+                    
+                    $icon.attr('title', tooltip);
+                    
+                    // Update status text in modal if provided
+                    if (message && $statusText.length) {
+                        $statusText.text(message);
+                    }
+                    
+                    logger.logCalculation('METAAPI_STATUS_UPDATED', { state, message });
+                },
+                
+                // Set connected state
+                setConnected: function(message = 'Connected to MetaAPI') {
+                    this.updateStatus(this.states.CONNECTED, message);
+                },
+                
+                // Set connecting state
+                setConnecting: function(message = 'Connecting to MetaAPI...') {
+                    this.updateStatus(this.states.CONNECTING, message);
+                },
+                
+                // Set disconnected state
+                setDisconnected: function(message = 'Not connected') {
+                    this.updateStatus(this.states.DISCONNECTED, message);
+                }
+            };
+
             // Logger function for tracking API calls and calculations
             const logger = {
                 entries: [],
@@ -1449,6 +1718,7 @@
                 // Update UI to show connecting state
                 const $btn = $(this);
                 $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Connecting...');
+                metaAPIStatusManager.setConnecting('Connecting to MetaAPI...');
                 $('#metaapi-status').show().removeClass('alert-success alert-danger alert-warning').addClass('alert-info');
                 $('#metaapi-status-text').text('Connecting to MetaAPI...');
                     
@@ -1458,23 +1728,19 @@
                         
                     // Update UI for successful initialization
                     metaAPIInitialized = true;
+                    metaAPIStatusManager.setConnected('Connected successfully');
                     $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> MetaAPI Ready');
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
                     $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> MetaAPI initialized! Data will be fetched on-demand when needed.');
                         
                     logger.logApi('METAAPI_CONNECTION_SUCCESS', { accountId, region });
                     
-                    // Save credentials to localStorage on successful connection
-                    try {
-                        localStorage.setItem('metaapi_key', apiKey);
-                        localStorage.setItem('metaapi_account', accountId);
-                        localStorage.setItem('metaapi_region', region);
-                        logger.logApi('METAAPI_CREDENTIALS_SAVED_TO_LOCALSTORAGE', { accountId, region });
-                        console.log('MetaAPI credentials saved to localStorage');
-                    } catch (storageError) {
-                        logger.logError('LOCALSTORAGE_SAVE_FAILED', storageError.message);
-                        console.warn('Could not save credentials to localStorage:', storageError);
-                    }
+                    // Save credentials to settings on successful connection
+                    settingsManager.saveSetting('metaapi_key', apiKey);
+                    settingsManager.saveSetting('metaapi_account', accountId);
+                    settingsManager.saveSetting('metaapi_region', region);
+                    logger.logApi('METAAPI_CREDENTIALS_SAVED_TO_SETTINGS', { accountId, region });
+                    console.log('MetaAPI credentials saved to settings');
                         
                     // Refresh current pair if selected
                     const currencyPair = $('#currency-pair').val();
@@ -1485,6 +1751,7 @@
                 } catch (error) {
                     // Update UI for failed initialization
                     metaAPIInitialized = false;
+                    metaAPIStatusManager.setDisconnected('Connection failed');
                     $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
                         
                     $('#metaapi-status').removeClass('alert-info').addClass('alert-danger');
@@ -1497,10 +1764,10 @@
             // Clear saved credentials button
             $('#clear-credentials-btn').click(function() {
                 try {
-                    // Clear from localStorage
-                    localStorage.removeItem('metaapi_key');
-                    localStorage.removeItem('metaapi_account');
-                    localStorage.removeItem('metaapi_region');
+                    // Clear from settings
+                    settingsManager.saveSetting('metaapi_key', '');
+                    settingsManager.saveSetting('metaapi_account', '');
+                    settingsManager.saveSetting('metaapi_region', 'new-york');
                     
                     // Clear form fields
                     $('#metaapi-key').val('');
@@ -1508,11 +1775,16 @@
                     $('#metaapi-region').val('new-york');
                     
                     // Update status
+                    metaAPIInitialized = false;
+                    metaAPIStatusManager.setDisconnected('Credentials cleared');
                     $('#metaapi-status').show().removeClass('alert-success alert-danger').addClass('alert-warning');
                     $('#metaapi-status-text').html('<i class="bi bi-info-circle"></i> Saved credentials cleared. Please enter new credentials.');
                     
-                    logger.logApi('METAAPI_CREDENTIALS_CLEARED', { source: 'localStorage' });
-                    console.log('MetaAPI credentials cleared from localStorage');
+                    // Reset connect button
+                    $('#metaapi-connect-btn').prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
+                    
+                    logger.logApi('METAAPI_CREDENTIALS_CLEARED', { source: 'settings' });
+                    console.log('MetaAPI credentials cleared from settings');
                     
                     alert('Saved credentials have been cleared.');
                 } catch (error) {
@@ -2536,6 +2808,87 @@
                 }
             }
 
+            // Settings Event Handlers
+            
+            // Save Settings Button
+            $('#save-settings-btn').click(function() {
+                const settings = settingsManager.collectSettingsFromUI();
+                settingsManager.saveAllSettings(settings);
+                
+                // Apply settings to main form
+                settingsManager.applySettingsToUI(settings);
+                
+                // Update global variables
+                selectedLotSize = settings.default_lot_size;
+                globalTimeframe = settings.global_timeframe;
+                
+                // Update timeframe display
+                $('.timeframe-option').removeClass('active');
+                $(`.timeframe-option[data-timeframe="${settings.global_timeframe}"]`).addClass('active');
+                const timeframeText = $(`.timeframe-option[data-timeframe="${settings.global_timeframe}"]`).text();
+                $('#atr-timeframe-display').text(timeframeText + ' timeframe');
+                
+                // Update lot size selection
+                $('.lot-option').removeClass('active');
+                $(`.lot-option[data-lot-type="${settings.default_lot_size}"]`).addClass('active');
+                
+                // Show success message
+                alert('Settings saved successfully!');
+                
+                // Close modal
+                $('#settingsModal').modal('hide');
+                
+                logger.logCalculation('SETTINGS_SAVED_AND_APPLIED', {}, settings);
+            });
+            
+            // Reset Settings Button
+            $('#reset-settings-btn').click(function() {
+                if (confirm('Are you sure you want to reset all settings to defaults? This will clear all saved preferences including MetaAPI credentials.')) {
+                    const defaults = settingsManager.resetToDefaults();
+                    
+                    // Reset global variables
+                    selectedLotSize = defaults.default_lot_size;
+                    globalTimeframe = defaults.global_timeframe;
+                    metaAPIInitialized = false;
+                    
+                    // Reset MetaAPI status
+                    metaAPIStatusManager.setDisconnected('Settings reset - please reconnect');
+                    
+                    // Update UI elements
+                    $('#metaapi-connect-btn').prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
+                    $('#metaapi-status').show().removeClass('alert-success alert-danger').addClass('alert-warning');
+                    $('#metaapi-status-text').text('Settings reset. Please enter your MetaAPI credentials.');
+                    
+                    alert('Settings reset to defaults successfully!');
+                    
+                    logger.logCalculation('SETTINGS_RESET_COMPLETED', {});
+                }
+            });
+            
+            // Account Currency Change Handler (Settings Modal)
+            $('#settings-account-currency').change(function() {
+                const newCurrency = $(this).val();
+                $('#settings-account-currency-symbol').text(newCurrency);
+                
+                // Also update main form
+                $('#account-currency').val(newCurrency);
+                $('.account-currency-symbol').text(newCurrency);
+                
+                logger.logCalculation('ACCOUNT_CURRENCY_CHANGED_IN_SETTINGS', { newCurrency });
+            });
+            
+            // Sync settings between modal and main form
+            $('#settings-account-size, #settings-risk-percentage').on('input change', function() {
+                const accountSize = $('#settings-account-size').val();
+                const riskPercentage = $('#settings-risk-percentage').val();
+                
+                // Update main form fields
+                $('#account-size').val(accountSize);
+                $('#risk-percentage').val(riskPercentage);
+                
+                logger.logCalculation('ACCOUNT_SETTINGS_SYNCED', { accountSize, riskPercentage });
+            });
+            
             // Auto-populate MetaAPI credentials on page load
             async function autoPopulateCredentials() {
                 try {
@@ -2651,14 +3004,156 @@
             // Show MetaAPI configuration by default (now in settings modal)
             $('#metaapi-config').show();
             
-            // Auto-populate credentials after a short delay to ensure config.js has loaded
-            setTimeout(autoPopulateCredentials, 1000);
+            // Initialize Settings System
+            function initializeSettings() {
+                logger.logCalculation('INITIALIZING_SETTINGS_SYSTEM', {});
+                
+                // Load saved settings
+                const savedSettings = settingsManager.loadSettings();
+                
+                // Apply settings to UI
+                settingsManager.applySettingsToUI(savedSettings);
+                
+                // Update global variables
+                selectedLotSize = savedSettings.default_lot_size;
+                globalTimeframe = savedSettings.global_timeframe;
+                
+                // Update timeframe display
+                const timeframeText = $(`.timeframe-option[data-timeframe="${savedSettings.global_timeframe}"]`).text();
+                $('#atr-timeframe-display').text(timeframeText + ' timeframe');
+                
+                // Initialize MetaAPI status as disconnected
+                metaAPIStatusManager.setDisconnected('Not connected');
+                
+                logger.logCalculation('SETTINGS_SYSTEM_INITIALIZED', {}, savedSettings);
+                
+                return savedSettings;
+            }
+            
+            // Enhanced auto-populate with settings integration
+            async function autoPopulateAndInitialize() {
+                // Initialize settings first
+                const settings = initializeSettings();
+                
+                try {
+                    let apiKey = settings.metaapi_key;
+                    let accountId = settings.metaapi_account;
+                    let region = settings.metaapi_region;
+                    let source = 'settings';
+                    
+                    console.log('Checking for credentials...', { hasApiKey: !!apiKey, hasAccountId: !!accountId, source });
+                    
+                    // Try to load from config file if not in settings
+                    if (!apiKey || !accountId) {
+                        if (typeof window !== 'undefined' && window.ENV_CONFIG) {
+                            apiKey = apiKey || window.ENV_CONFIG.METAAPI_API_KEY || '';
+                            accountId = accountId || window.ENV_CONFIG.METAAPI_ACCOUNT_ID || '';
+                            region = region || window.ENV_CONFIG.METAAPI_REGION || 'new-york';
+                            if (apiKey && accountId) {
+                                source = 'config';
+                                console.log('Found credentials in config:', { hasApiKey: !!apiKey, hasAccountId: !!accountId, region });
+                            }
+                        }
+                    }
+                    
+                    // Auto-fill the form fields if we found values
+                    if (apiKey) {
+                        $('#metaapi-key').val(apiKey);
+                        console.log('Auto-populated API key from', source);
+                        logger.logApi('METAAPI_KEY_AUTO_POPULATED', { source });
+                    }
+                    if (accountId) {
+                        $('#metaapi-account').val(accountId);
+                        console.log('Auto-populated Account ID from', source);
+                        logger.logApi('METAAPI_ACCOUNT_AUTO_POPULATED', { source });
+                    }
+                    if (region) {
+                        $('#metaapi-region').val(region);
+                        console.log('Auto-populated region from', source, ':', region);
+                        logger.logApi('METAAPI_REGION_AUTO_POPULATED', { source, region });
+                    }
+                    
+                    // If both credentials are available and auto-initialize is enabled, auto-initialize MetaAPI
+                    if (apiKey && accountId && settings.auto_initialize_metaapi) {
+                        console.log('Credentials ready for auto-initialization from', source);
+                        logger.logApi('METAAPI_AUTO_INIT_STARTED', { hasApiKey: !!apiKey, hasAccountId: !!accountId, source });
+                        
+                        // Update status to connecting
+                        metaAPIStatusManager.setConnecting('Auto-initializing...');
+                        
+                        // Update UI to show auto-initializing state
+                        const $btn = $('#metaapi-connect-btn');
+                        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Auto-initializing...');
+                        $('#metaapi-status').show().removeClass('alert-success alert-danger alert-warning').addClass('alert-info');
+                        const sourceText = source === 'settings' ? 'saved credentials' : 'configuration';
+                        $('#metaapi-status-text').text(`Auto-initializing MetaAPI with ${sourceText}...`);
+                        
+                        try {
+                            // Initialize MetaAPI (simple connection, no sync wait)
+                            await metaAPIService.initialize(apiKey, accountId, region);
+                            
+                            // Update UI for successful initialization
+                            metaAPIInitialized = true;
+                            metaAPIStatusManager.setConnected('Auto-initialized successfully');
+                            $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> MetaAPI Ready');
+                            $('#metaapi-status').removeClass('alert-info').addClass('alert-success');
+                            $('#metaapi-status-text').html('<i class="bi bi-check-circle"></i> MetaAPI auto-initialized successfully! Data will be fetched on-demand when needed.');
+                            
+                            logger.logApi('METAAPI_AUTO_INIT_SUCCESS', { accountId, region, source });
+                            console.log('MetaAPI auto-initialized successfully from', source);
+                            
+                            // Save credentials to settings if they came from config
+                            if (source === 'config') {
+                                settingsManager.saveSetting('metaapi_key', apiKey);
+                                settingsManager.saveSetting('metaapi_account', accountId);
+                                settingsManager.saveSetting('metaapi_region', region);
+                                logger.logApi('METAAPI_CREDENTIALS_SAVED_FROM_CONFIG', { accountId, region });
+                            }
+                            
+                            // Refresh current pair if selected
+                            const currencyPair = $('#currency-pair').val();
+                            if (currencyPair) {
+                                fetchForexRate(currencyPair, true);
+                            }
+                            
+                        } catch (error) {
+                            // Update UI for failed initialization
+                            metaAPIInitialized = false;
+                            metaAPIStatusManager.setDisconnected('Auto-initialization failed');
+                            $btn.prop('disabled', false).html('<i class="bi bi-plug"></i> Initialize MetaAPI');
+                            
+                            $('#metaapi-status').removeClass('alert-info').addClass('alert-warning');
+                            $('#metaapi-status-text').html(`<i class="bi bi-exclamation-triangle"></i> Auto-initialization failed: ${error.message}. Click "Initialize MetaAPI" to retry.`);
+                            
+                            logger.logError('METAAPI_AUTO_INIT_FAILED', error.message, { accountId, region, source });
+                            console.warn('MetaAPI auto-initialization failed:', error);
+                        }
+                    } else {
+                        console.log('Auto-initialization skipped:', { 
+                            hasApiKey: !!apiKey, 
+                            hasAccountId: !!accountId, 
+                            autoInit: settings.auto_initialize_metaapi 
+                        });
+                        metaAPIStatusManager.setDisconnected('Please configure MetaAPI credentials');
+                        $('#metaapi-status').show().removeClass('alert-success').addClass('alert-warning');
+                        $('#metaapi-status-text').text('Please enter your MetaAPI credentials or check your configuration file.');
+                    }
+                    
+                } catch (error) {
+                    console.error('Auto-populate failed:', error);
+                    metaAPIStatusManager.setDisconnected('Initialization error');
+                    logger.logError('AUTO_POPULATE_CREDENTIALS_FAILED', error.message);
+                }
+            }
+            
+            // Initialize everything after a short delay to ensure config.js has loaded
+            setTimeout(autoPopulateAndInitialize, 1000);
             
             // Also try again after 2 seconds in case config loading is slow
             setTimeout(function() {
-                if (!$('#metaapi-key').val() || !$('#metaapi-account').val()) {
+                if (!metaAPIInitialized && (!$('#metaapi-key').val() || !$('#metaapi-account').val())) {
                     console.log('Retrying credential auto-population...');
-                    autoPopulateCredentials();
+                    autoPopulateAndInitialize();
                 }
             }, 2000);
             
