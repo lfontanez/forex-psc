@@ -2912,6 +2912,20 @@
                 logger.logCalculation('ACCOUNT_SETTINGS_SYNCED', { accountSize, riskPercentage });
             });
             
+            // Sync SL multiplier changes
+            $('#settings-default-sl-multiplier').on('input change', function() {
+                const slMultiplier = $(this).val();
+                $('#atr-multiplier').val(slMultiplier);
+                logger.logCalculation('SL_MULTIPLIER_SYNCED', { slMultiplier });
+            });
+            
+            // Sync TP ratio changes
+            $('#settings-default-tp-ratio').on('input change', function() {
+                const tpRatio = $(this).val();
+                $('#risk-reward-ratio-input').val(tpRatio);
+                logger.logCalculation('TP_RATIO_SYNCED', { tpRatio });
+            });
+            
             // Auto-populate MetaAPI credentials on page load
             async function autoPopulateCredentials() {
                 try {
