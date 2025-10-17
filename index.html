@@ -438,74 +438,6 @@
                     </div>
                 </div>
 
-                <!-- MetaAPI Configuration Section -->
-                <div id="metaapi-config" class="form-section" style="display: none; background-color: #e8f5e9; border-left: 3px solid #4caf50;">
-                    <div class="form-section-title">MetaAPI Configuration <span class="badge-info">Live Data</span></div>
-                    <div class="row mb-3">
-                        <div class="col-md-6 mb-3">
-                            <label for="metaapi-key" class="form-label">MetaAPI Key:</label>
-                            <input type="password" class="form-control" id="metaapi-key" placeholder="Enter your MetaAPI key">
-                            <small class="text-muted">Your MetaAPI authentication key</small>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="metaapi-account" class="form-label">Account ID:</label>
-                            <input type="text" class="form-control" id="metaapi-account" placeholder="Enter your account ID">
-                            <small class="text-muted">Your MetaTrader account ID</small>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6 mb-3">
-                            <label for="metaapi-region" class="form-label">Region:</label>
-                            <select class="form-select" id="metaapi-region">
-                                <option value="new-york">New York</option>
-                                <option value="london">London</option>
-                                <option value="singapore">Singapore</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-success me-2" id="metaapi-connect-btn">
-                                <i class="bi bi-plug"></i> Initialize MetaAPI
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="clear-credentials-btn">
-                                <i class="bi bi-trash"></i> Clear Saved
-                            </button>
-                        </div>
-                    </div>
-                    <div id="metaapi-status" class="alert alert-info" style="display: none;">
-                        <i class="bi bi-info-circle"></i> <span id="metaapi-status-text">Ready for on-demand data fetching</span>
-                    </div>
-                </div>
-
-                <!-- Manual Data Input Section (when API is offline) -->
-                <div id="manual-data-section" class="form-section" style="display: none; background-color: #fff3cd; border-left: 3px solid #ffc107;">
-                    <div class="form-section-title">Manual Data Entry <span class="badge" style="background-color: #ffc107; color: #000;">Offline Mode</span></div>
-                    <p class="text-warning mb-3">
-                        <i class="bi bi-exclamation-triangle"></i> 
-                        API connection unavailable. Please enter market data manually for accurate calculations.
-                    </p>
-                    <div class="row mb-3">
-                        <div class="col-md-6 mb-3">
-                            <label for="manual-current-price" class="form-label">Current Market Price:</label>
-                            <input type="number" class="form-control" id="manual-current-price" step="0.00001" placeholder="Enter current price">
-                            <small class="text-muted">Current market price for the selected pair</small>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="manual-atr-value" class="form-label">ATR Value:</label>
-                            <input type="number" class="form-control" id="manual-atr-value" step="0.00001" placeholder="Enter ATR value">
-                            <small class="text-muted">Average True Range for the selected timeframe</small>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <button type="button" class="btn btn-warning" id="apply-manual-data-btn">
-                                <i class="bi bi-check-circle"></i> Apply Manual Data
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary ms-2" id="retry-api-connection-btn">
-                                <i class="bi bi-arrow-clockwise"></i> Retry API Connection
-                            </button>
-                        </div>
-                    </div>
-                </div>
                 
                 <div class="row mb-3">
                     <div class="col-md-6 mb-3">
@@ -827,21 +759,128 @@
 
         <!-- Settings Modal -->
         <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="settingsModalLabel">
-                            <i class="bi bi-gear-fill me-2"></i>Settings
+                            <i class="bi bi-gear-fill me-2"></i>Calculator Settings
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Settings content will be populated here -->
-                        <p class="text-muted">Settings panel will be implemented in the next step.</p>
+                        <!-- Data Source Configuration -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-cloud-arrow-down me-2"></i>Data Source Configuration
+                            </h6>
+                            
+                            <!-- MetaAPI Configuration Section -->
+                            <div id="metaapi-config" class="form-section" style="background-color: #e8f5e9; border-left: 3px solid #4caf50;">
+                                <div class="form-section-title">MetaAPI Configuration <span class="badge-info">Live Data</span></div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="metaapi-key" class="form-label">MetaAPI Key:</label>
+                                        <input type="password" class="form-control" id="metaapi-key" placeholder="Enter your MetaAPI key">
+                                        <small class="text-muted">Your MetaAPI authentication key</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="metaapi-account" class="form-label">Account ID:</label>
+                                        <input type="text" class="form-control" id="metaapi-account" placeholder="Enter your account ID">
+                                        <small class="text-muted">Your MetaTrader account ID</small>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="metaapi-region" class="form-label">Region:</label>
+                                        <select class="form-select" id="metaapi-region">
+                                            <option value="new-york">New York</option>
+                                            <option value="london">London</option>
+                                            <option value="singapore">Singapore</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-success me-2" id="metaapi-connect-btn">
+                                            <i class="bi bi-plug"></i> Initialize MetaAPI
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="clear-credentials-btn">
+                                            <i class="bi bi-trash"></i> Clear Saved
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="metaapi-status" class="alert alert-info" style="display: none;">
+                                    <i class="bi bi-info-circle"></i> <span id="metaapi-status-text">Ready for on-demand data fetching</span>
+                                </div>
+                            </div>
+
+                            <!-- Manual Data Input Section -->
+                            <div id="manual-data-section" class="form-section mt-3" style="background-color: #fff3cd; border-left: 3px solid #ffc107;">
+                                <div class="form-section-title">Manual Data Entry <span class="badge" style="background-color: #ffc107; color: #000;">Offline Mode</span></div>
+                                <p class="text-warning mb-3">
+                                    <i class="bi bi-exclamation-triangle"></i> 
+                                    API connection unavailable. Please enter market data manually for accurate calculations.
+                                </p>
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="manual-current-price" class="form-label">Current Market Price:</label>
+                                        <input type="number" class="form-control" id="manual-current-price" step="0.00001" placeholder="Enter current price">
+                                        <small class="text-muted">Current market price for the selected pair</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="manual-atr-value" class="form-label">ATR Value:</label>
+                                        <input type="number" class="form-control" id="manual-atr-value" step="0.00001" placeholder="Enter ATR value">
+                                        <small class="text-muted">Average True Range for the selected timeframe</small>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-warning" id="apply-manual-data-btn">
+                                            <i class="bi bi-check-circle"></i> Apply Manual Data
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary ms-2" id="retry-api-connection-btn">
+                                            <i class="bi bi-arrow-clockwise"></i> Retry API Connection
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Settings Sections -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-sliders me-2"></i>Calculator Preferences
+                            </h6>
+                            <div class="form-section">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="default-risk-percentage" class="form-label">Default Risk Percentage:</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="default-risk-percentage" min="0.1" max="100" step="0.1" value="2">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">Default risk percentage for new calculations</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="default-atr-periods" class="form-label">Default ATR Periods:</label>
+                                        <select class="form-select" id="default-atr-periods">
+                                            <option value="14">14 periods (standard)</option>
+                                            <option value="20">20 periods</option>
+                                            <option value="10">10 periods</option>
+                                            <option value="5">5 periods</option>
+                                        </select>
+                                        <small class="text-muted">Default ATR calculation period</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" id="reset-settings-btn">
+                            <i class="bi bi-arrow-clockwise"></i> Reset to Defaults
+                        </button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="save-settings-btn">Save Changes</button>
+                        <button type="button" class="btn btn-primary" id="save-settings-btn">
+                            <i class="bi bi-check-lg"></i> Save Settings
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2609,7 +2648,7 @@
                 }
             }
 
-            // Show MetaAPI configuration by default
+            // Show MetaAPI configuration by default (now in settings modal)
             $('#metaapi-config').show();
             
             // Auto-populate credentials after a short delay to ensure config.js has loaded
