@@ -329,12 +329,11 @@
             font-style: italic;
         }
         .header-icons {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
             display: flex;
-            gap: 0.75rem;
+            justify-content: center;
             align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
         }
         .header-icon {
             cursor: pointer;
@@ -399,6 +398,7 @@
 <body>
     <div class="calculator-container">
         <div class="header">
+            <h1>Forex Position Size Calculator</h1>
             <div class="header-icons">
                 <div class="header-icon" id="settings-icon" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Settings">
                     <i class="bi bi-gear-fill"></i>
@@ -407,7 +407,6 @@
                     <i class="bi bi-wifi"></i>
                 </div>
             </div>
-            <h1>Forex Position Size Calculator</h1>
             <p class="lead">Calculate the optimal position size based on your risk management settings</p>
         </div>
 
