@@ -115,6 +115,52 @@
         .profit-indicator.negative {
             color: #dc3545;
         }
+        .risk-reward-display {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid #007bff;
+            margin-top: 0.5rem;
+        }
+        .risk-reward-ratio {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 0.5rem;
+        }
+        .risk-reward-explanation {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+            font-style: italic;
+        }
+        .risk-reward-breakdown {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .risk-amount, .reward-amount {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        .risk-amount {
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+        }
+        .reward-amount {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #2f855a;
+        }
+        .vs-separator {
+            font-weight: bold;
+            color: #495057;
+            font-size: 1.1rem;
+        }
         .form-section {
             border: 1px solid #eee;
             border-radius: 8px;
@@ -184,7 +230,7 @@
             background-color: #f9f9f9;
         }
         .debug-toggle-btn {
-            background-color: #6c757d;
+            background-color: #343a40;
             color: white;
             border: none;
             padding: 0.5rem 1rem;
@@ -194,7 +240,7 @@
             font-size: 0.9rem;
         }
         .debug-toggle-btn:hover {
-            background-color: #5a6268;
+            background-color: #23272b;
         }
         .debug-content {
             display: none;
@@ -294,6 +340,10 @@
             border-radius: 4px;
             margin-top: 1rem;
             cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .toggle-logs-btn:hover {
+            background-color: #23272b;
         }
         .global-timeframe-section {
             background-color: #ebf7ed;
@@ -753,7 +803,7 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <p>Risk-to-Reward Ratio</p>
-                    <div class="result-value" id="risk-reward-ratio-display">-</div>
+                    <div id="risk-reward-ratio-display">-</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p>Potential Profit</p>
@@ -2927,9 +2977,24 @@
                     
                     // Create enhanced display with actual amounts
                     riskRewardDisplay = `
-                        <div class="fw-bold text-primary">${riskRewardRatio}</div>
-                        <div class="small text-muted mt-1">
-                            Risk ${accountCurrency} ${actualRiskAmount.toFixed(0)} : Reward ${accountCurrency} ${potentialProfit.toFixed(0)}
+                        <div class="risk-reward-display">
+                            <div class="risk-reward-ratio">
+                                <i class="bi bi-graph-up-arrow me-2"></i>${riskRewardRatio}
+                            </div>
+                            <div class="risk-reward-explanation">
+                                Net profit ratio if trade reaches take profit target
+                            </div>
+                            <div class="risk-reward-breakdown">
+                                <div class="risk-amount">
+                                    <div class="fw-bold">Risk</div>
+                                    <div>${accountCurrency} ${actualRiskAmount.toFixed(0)}</div>
+                                </div>
+                                <div class="vs-separator">vs</div>
+                                <div class="reward-amount">
+                                    <div class="fw-bold">Reward</div>
+                                    <div>${accountCurrency} ${potentialProfit.toFixed(0)}</div>
+                                </div>
+                            </div>
                         </div>
                     `;
                     
@@ -2965,7 +3030,7 @@
                     $('#potential-profit').addClass('positive');
                 } else {
                     $('#take-profit-distance').text('Not set');
-                    $('#risk-reward-ratio-display').html('-');
+                    $('#risk-reward-ratio-display').html('<div class="text-muted">Not calculated</div>');
                     $('#potential-profit').text('Not calculated');
                     $('#potential-profit').removeClass('positive');
                 }
