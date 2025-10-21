@@ -1551,6 +1551,9 @@
             // Thousand separators preference
             let useThousandSeparators = false;
             
+            // Theme management
+            let currentTheme = 'light';
+            
             // Timeframe conversion factors for ATR (relative to daily timeframe)
             const timeframeFactors = {
                 '1m': 0.05,   // 1 minute is roughly 5% of daily ATR
@@ -3188,6 +3191,64 @@
                 }
             }
             
+            // Theme management functions
+            function toggleTheme() {
+                // Switch between light and dark themes
+                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                // Update document attribute
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                
+                // Update theme icon
+                const $themeIcon = $('#theme-icon');
+                if (currentTheme === 'dark') {
+                    $themeIcon.removeClass('bi-sun-fill').addClass('bi-moon-fill');
+                } else {
+                    $themeIcon.removeClass('bi-moon-fill').addClass('bi-sun-fill');
+                }
+                
+                // Save theme preference to localStorage
+                try {
+                    localStorage.setItem('forex_calc_theme', currentTheme);
+                } catch (error) {
+                    console.warn('Could not save theme preference:', error);
+                }
+                
+                // Log the theme change
+                logger.logCalculation('THEME_TOGGLED', { oldTheme: currentTheme === 'light' ? 'dark' : 'light' }, { newTheme: currentTheme });
+                
+                console.log('Theme switched to:', currentTheme);
+            }
+            
+            function initializeTheme() {
+                // Load theme preference from localStorage
+                try {
+                    const savedTheme = localStorage.getItem('forex_calc_theme');
+                    if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                        currentTheme = savedTheme;
+                    } else {
+                        currentTheme = 'light'; // Default to light theme
+                    }
+                } catch (error) {
+                    console.warn('Could not load theme preference:', error);
+                    currentTheme = 'light'; // Default to light theme
+                }
+                
+                // Apply the theme
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                
+                // Update the icon
+                const $themeIcon = $('#theme-icon');
+                if (currentTheme === 'dark') {
+                    $themeIcon.removeClass('bi-sun-fill').addClass('bi-moon-fill');
+                } else {
+                    $themeIcon.removeClass('bi-moon-fill').addClass('bi-sun-fill');
+                }
+                
+                logger.logCalculation('THEME_INITIALIZED', {}, { theme: currentTheme });
+                console.log('Theme initialized:', currentTheme);
+            }
+            
             // Currency symbol mapping function
             function getCurrencySymbol(currencyCode) {
                 const currencySymbols = {
@@ -3234,6 +3295,11 @@
                 }
             }
 
+            // Theme toggle event handler
+            $('#theme-toggle-icon').click(function() {
+                toggleTheme();
+            });
+            
             // Settings Event Handlers
             
             // Save Settings Button
@@ -3642,6 +3708,9 @@
                     logger.logError('AUTO_POPULATE_CREDENTIALS_FAILED', error.message);
                 }
             }
+            
+            // Initialize theme first
+            initializeTheme();
             
             // Initialize everything after a short delay to ensure config.js has loaded
             setTimeout(autoPopulateAndInitialize, 1000);
