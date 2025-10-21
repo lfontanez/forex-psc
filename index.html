@@ -1200,7 +1200,8 @@
                     // UI Preferences
                     auto_initialize_metaapi: true,
                     show_debug_info: true,
-                    use_thousand_separators: false
+                    use_thousand_separators: false,
+                    theme: 'light'
                 },
                 
                 // Load all settings from localStorage
@@ -1258,6 +1259,18 @@
                     // Update global useThousandSeparators variable
                     useThousandSeparators = settings.use_thousand_separators;
                     
+                    // Apply theme settings
+                    currentTheme = settings.theme;
+                    document.documentElement.setAttribute('data-theme', settings.theme);
+                    
+                    // Update theme icon
+                    const $themeIcon = $('#theme-icon');
+                    if (settings.theme === 'dark') {
+                        $themeIcon.removeClass('bi-sun-fill').addClass('bi-moon-fill');
+                    } else {
+                        $themeIcon.removeClass('bi-moon-fill').addClass('bi-sun-fill');
+                    }
+                    
                     // Calculator Preferences
                     $('#atr-periods').val(settings.default_atr_periods);
                     $('#default-atr-periods').val(settings.default_atr_periods);
@@ -1312,7 +1325,8 @@
                         // UI Preferences
                         auto_initialize_metaapi: true, // Always true for now
                         show_debug_info: true, // Always true for now
-                        use_thousand_separators: $('#settings-use-thousand-separators').is(':checked')
+                        use_thousand_separators: $('#settings-use-thousand-separators').is(':checked'),
+                        theme: currentTheme
                     };
                 },
                 
@@ -3314,6 +3328,7 @@
                 selectedLotSize = settings.default_lot_size;
                 globalTimeframe = settings.global_timeframe;
                 useThousandSeparators = settings.use_thousand_separators;
+                currentTheme = settings.theme;
                 
                 // Update timeframe display
                 $('.timeframe-option').removeClass('active');
@@ -3572,6 +3587,7 @@
                 selectedLotSize = savedSettings.default_lot_size;
                 globalTimeframe = savedSettings.global_timeframe;
                 useThousandSeparators = savedSettings.use_thousand_separators;
+                currentTheme = savedSettings.theme;
                 
                 // Update timeframe display
                 const timeframeText = $(`.timeframe-option[data-timeframe="${savedSettings.global_timeframe}"]`).text();
@@ -3708,9 +3724,6 @@
                     logger.logError('AUTO_POPULATE_CREDENTIALS_FAILED', error.message);
                 }
             }
-            
-            // Initialize theme first
-            initializeTheme();
             
             // Initialize everything after a short delay to ensure config.js has loaded
             setTimeout(autoPopulateAndInitialize, 1000);
