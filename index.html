@@ -3221,11 +3221,14 @@
                     $themeIcon.removeClass('bi-moon-fill').addClass('bi-sun-fill');
                 }
                 
-                // Save theme preference to localStorage
+                // Save theme preference to settings system
+                settingsManager.saveSetting('theme', currentTheme);
+                
+                // Also save to localStorage for backward compatibility
                 try {
                     localStorage.setItem('forex_calc_theme', currentTheme);
                 } catch (error) {
-                    console.warn('Could not save theme preference:', error);
+                    console.warn('Could not save theme preference to localStorage:', error);
                 }
                 
                 // Log the theme change
@@ -3235,18 +3238,8 @@
             }
             
             function initializeTheme() {
-                // Load theme preference from localStorage
-                try {
-                    const savedTheme = localStorage.getItem('forex_calc_theme');
-                    if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
-                        currentTheme = savedTheme;
-                    } else {
-                        currentTheme = 'light'; // Default to light theme
-                    }
-                } catch (error) {
-                    console.warn('Could not load theme preference:', error);
-                    currentTheme = 'light'; // Default to light theme
-                }
+                // Theme should already be set by currentTheme global variable from settings
+                // This function just applies the current theme to the UI
                 
                 // Apply the theme
                 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -3583,6 +3576,9 @@
                 // Apply settings to UI
                 settingsManager.applySettingsToUI(savedSettings);
                 
+                // Initialize theme from settings (takes precedence over localStorage)
+                initializeTheme();
+                
                 // Update global variables
                 selectedLotSize = savedSettings.default_lot_size;
                 globalTimeframe = savedSettings.global_timeframe;
@@ -3608,7 +3604,7 @@
             
             // Enhanced auto-populate with settings integration
             async function autoPopulateAndInitialize() {
-                // Initialize settings first
+                // Initialize settings first (this also initializes theme)
                 const settings = initializeSettings();
                 
                 try {
@@ -3722,6 +3718,21 @@
                     console.error('Auto-populate failed:', error);
                     metaAPIStatusManager.setDisconnected('Initialization error');
                     logger.logError('AUTO_POPULATE_CREDENTIALS_FAILED', error.message);
+                }
+            }
+            
+            // Initialize theme as fallback (in case settings system fails)
+            // This will only apply if currentTheme hasn't been set by settings
+            if (!currentTheme || currentTheme === 'light') {
+                try {
+                    const savedTheme = localStorage.getItem('forex_calc_theme');
+                    if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                        currentTheme = savedTheme;
+                        initializeTheme();
+                        logger.logCalculation('THEME_FALLBACK_INITIALIZED', { source: 'localStorage' }, { theme: currentTheme });
+                    }
+                } catch (error) {
+                    console.warn('Could not load theme fallback:', error);
                 }
             }
             
