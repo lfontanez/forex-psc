@@ -1143,6 +1143,9 @@
                     $('#settings-risk-percentage').val(settings.risk_percentage);
                     $('#settings-account-currency').val(settings.account_currency);
                     
+                    // Update global useThousandSeparators variable
+                    useThousandSeparators = settings.use_thousand_separators;
+                    
                     // Calculator Preferences
                     $('#atr-periods').val(settings.default_atr_periods);
                     $('#default-atr-periods').val(settings.default_atr_periods);
@@ -3018,7 +3021,7 @@
 
                 // Display results
                 $('#position-size-lots').text(adjustedPositionSizeInLots.toFixed(2));
-                $('#position-size-units').text(Math.round(positionSizeUnits).toLocaleString());
+                $('#position-size-units').text(formatNumberWithSeparators(Math.round(positionSizeUnits), 0, useThousandSeparators));
                 $('#risk-amount').text(formatCurrencyAmount(actualRiskAmount, accountCurrency));
                 $('#pip-value').text(formatCurrencyAmount(pipValueInAccountCurrency * selectedLotRatio * adjustedPositionSizeInLots, accountCurrency));
                 $('#stop-loss-distance').text(`${stopLossPips.toFixed(1)} pips`);
@@ -3094,7 +3097,7 @@
             // Format currency amount with proper symbol
             function formatCurrencyAmount(amount, currencyCode, decimals = 2) {
                 const symbol = getCurrencySymbol(currencyCode);
-                const formattedAmount = amount.toFixed(decimals);
+                const formattedAmount = formatNumberWithSeparators(amount, decimals, useThousandSeparators);
                 
                 // For currencies that use symbol prefix (most currencies)
                 if (['$', '€', '£', '¥', 'A$', 'C$', 'NZ$'].includes(symbol)) {
@@ -3132,6 +3135,7 @@
                 // Update global variables
                 selectedLotSize = settings.default_lot_size;
                 globalTimeframe = settings.global_timeframe;
+                useThousandSeparators = settings.use_thousand_separators;
                 
                 // Update timeframe display
                 $('.timeframe-option').removeClass('active');
