@@ -470,6 +470,7 @@
                             <option value="GBPAUD">GBP/AUD</option>
                             <option value="XAUUSD">XAU/USD (Gold)</option>
                         </select>
+                        <small class="text-muted" id="symbols-status">Using default symbol list</small>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="account-currency" class="form-label">Account Currency:</label>
@@ -1308,6 +1309,10 @@
             let forexRates = {};
             let lastUpdateTime = null;
             
+            // Store available symbols
+            let availableSymbols = [];
+            let symbolsFromAPI = false;
+            
             // Selected lot size type
             let selectedLotSize = 'standard';
             
@@ -1328,6 +1333,12 @@
                 '8h': 0.82,   // 8 hours is roughly 82% of daily ATR
                 '1d': 1.0     // Daily is the reference (100%)
             };
+            
+            // Default symbol list (fallback when API not available)
+            const defaultSymbols = [
+                'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD',
+                'EURJPY', 'GBPJPY', 'EURGBP', 'AUDJPY', 'EURAUD', 'GBPAUD', 'XAUUSD'
+            ];
             
             // Default ATR values by currency pair (fallback when API not available)
             // These are daily ATR values that will be scaled according to timeframe
@@ -1425,6 +1436,93 @@
                 return currentATRValue * scalingRatio;
             }
 
+            
+            // Function to fetch symbols from MetaAPI and populate dropdown
+            async function fetchAndPopulateSymbols() {
+                if (!metaAPIInitialized) {
+                    logger.logApi('FETCH_SYMBOLS_SKIPPED', { reason: 'MetaAPI not initialized' });
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    $('#symbols-status').text('Loading symbols from MetaAPI...');
+                    logger.logApi('FETCH_SYMBOLS_STARTED', {});
+                    
+                    // Fetch symbols from MetaAPI
+                    const symbols = await metaAPIService.getSymbols();
+                    
+                    logger.logApi('FETCH_SYMBOLS_SUCCESS', {}, { symbolCount: symbols.length, symbols: symbols.slice(0, 10) });
+                    
+                    // Store symbols
+                    availableSymbols = symbols;
+                    symbolsFromAPI = true;
+                    
+                    // Populate dropdown
+                    populateSymbolDropdown(symbols);
+                    
+                    // Update status
+                    $('#symbols-status').text(`${symbols.length} symbols loaded from MetaAPI`);
+                    
+                } catch (error) {
+                    logger.logError('FETCH_SYMBOLS_FAILED', error.message);
+                    
+                    // Check if it's a CORS error
+                    const isCorsError = error.message.includes('CORS') || 
+                                       error.message.includes('Network') || 
+                                       error.message.includes('Failed to fetch') || 
+                                       error.name === 'TypeError' ||
+                                       (error.message && error.message.toLowerCase().includes('cross-origin'));
+                    
+                    if (isCorsError) {
+                        $('#symbols-status').text('CORS blocked - using default symbols');
+                        logger.logError('FETCH_SYMBOLS_CORS_ERROR', 'CORS error detected in symbols fetching');
+                    } else {
+                        $('#symbols-status').text('API error - using default symbols');
+                    }
+                    
+                    // Fall back to default symbols
+                    populateSymbolDropdown(defaultSymbols);
+                    availableSymbols = defaultSymbols;
+                    symbolsFromAPI = false;
+                }
+            }
+            
+            // Function to populate symbol dropdown
+            function populateSymbolDropdown(symbols) {
+                const $dropdown = $('#currency-pair');
+                const currentValue = $dropdown.val(); // Preserve current selection
+                
+                logger.logCalculation('POPULATE_SYMBOL_DROPDOWN_STARTED', { symbolCount: symbols.length, currentValue });
+                
+                // Clear existing options except the first one
+                $dropdown.find('option:not(:first)').remove();
+                
+                // Add symbols to dropdown
+                symbols.forEach(symbol => {
+                    // Format symbol for display (add slash for forex pairs)
+                    let displayName = symbol;
+                    if (symbol.length === 6 && symbol !== 'XAUUSD') {
+                        // Standard forex pair - add slash
+                        displayName = `${symbol.substring(0, 3)}/${symbol.substring(3, 6)}`;
+                    } else if (symbol === 'XAUUSD') {
+                        displayName = 'XAU/USD (Gold)';
+                    }
+                    
+                    $dropdown.append(`<option value="${symbol}">${displayName}</option>`);
+                });
+                
+                // Restore previous selection if it still exists
+                if (currentValue && symbols.includes(currentValue)) {
+                    $dropdown.val(currentValue);
+                    logger.logCalculation('SYMBOL_SELECTION_RESTORED', { currentValue });
+                }
+                
+                logger.logCalculation('POPULATE_SYMBOL_DROPDOWN_COMPLETED', { 
+                    symbolCount: symbols.length, 
+                    finalSelection: $dropdown.val() 
+                });
+            }
             
             // Function to fetch ATR from MetaAPI
             async function fetchATR(currencyPair, timeframe, periods = '14') {
@@ -1765,6 +1863,9 @@
                     settingsManager.saveSetting('metaapi_region', region);
                     logger.logApi('METAAPI_CREDENTIALS_SAVED_TO_SETTINGS', { accountId, region });
                     console.log('MetaAPI credentials saved to settings');
+                    
+                    // Fetch and populate symbols
+                    await fetchAndPopulateSymbols();
                         
                     // Refresh current pair if selected
                     const currencyPair = $('#currency-pair').val();
@@ -3165,6 +3266,9 @@
                                 settingsManager.saveSetting('metaapi_region', region);
                                 logger.logApi('METAAPI_CREDENTIALS_SAVED_FROM_CONFIG', { accountId, region });
                             }
+                            
+                            // Fetch and populate symbols
+                            await fetchAndPopulateSymbols();
                             
                             // Refresh current pair if selected
                             const currencyPair = $('#currency-pair').val();

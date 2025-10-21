@@ -224,6 +224,47 @@ class MetaAPIService {
         return atr;
     }
 
+    // Get available symbols from MetaAPI
+    async getSymbols() {
+        if (!this.config.apiKey || !this.config.accountId) {
+            throw new Error('MetaAPI not initialized. Please connect first.');
+        }
+
+        try {
+            console.log('Fetching available symbols from MetaAPI...');
+            
+            const url = `https://mt-client-api-v1.${this.config.region}.agiliumtrade.ai/users/current/accounts/${this.config.accountId}/symbols`;
+            
+            const symbolsData = await this.makeRestRequest(url);
+            
+            if (!symbolsData || !Array.isArray(symbolsData)) {
+                throw new Error('Invalid symbols data received from MetaAPI');
+            }
+            
+            // Extract symbol names from the response
+            // MetaAPI returns objects with symbol information, we need just the symbol names
+            const symbols = symbolsData.map(symbolInfo => {
+                // Handle both string arrays and object arrays
+                if (typeof symbolInfo === 'string') {
+                    return symbolInfo;
+                } else if (symbolInfo && symbolInfo.symbol) {
+                    return symbolInfo.symbol;
+                } else if (symbolInfo && symbolInfo.name) {
+                    return symbolInfo.name;
+                } else {
+                    return null;
+                }
+            }).filter(symbol => symbol !== null);
+            
+            console.log(`Received ${symbols.length} symbols from MetaAPI`);
+            
+            return symbols;
+        } catch (error) {
+            console.error('Failed to get symbols from MetaAPI:', error);
+            throw error;
+        }
+    }
+
     // Get ATR for a symbol and timeframe (on-demand only)
     async getATR(symbol, timeframe, periods = 14) {
         try {
