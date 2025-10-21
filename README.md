@@ -5,6 +5,7 @@ A professional web-based calculator that helps traders determine optimal positio
 ## Features
 
 - **Real-time Data**: Integrates with MetaAPI REST API for live bid/ask prices and spreads
+- **Dynamic Symbol Loading**: Auto-populates currency pair dropdown from your MetaTrader account
 - **Historical ATR**: Calculates Average True Range using real market data via REST API
 - **Timeframe Selection**: Supports 1m, 5m, 15m, 30m, 1h, 4h, 8h and Daily timeframes
 - **Smart Fallbacks**: Graceful degradation from live data → fallback rates → manual entry
@@ -98,6 +99,7 @@ The calculator automatically saves your MetaAPI credentials to browser localStor
 **Return visits:**
 - Page loads and automatically detects saved credentials
 - MetaAPI auto-initializes in the background
+- Available symbols automatically load from your account
 - Connection status appears when ready
 - No manual initialization needed - just start calculating!
 
@@ -178,9 +180,51 @@ When converting ATR values to pips, the calculator uses the correct pip size:
 
 This ensures accurate risk management calculations across all currency pairs.
 
-## Supported Currency Pairs
+## Technical Implementation
 
-Major pairs, crosses, and commodities:
+### REST API Integration
+The calculator uses MetaAPI's REST API for all data operations:
+
+**Price Data**: `GET /users/current/accounts/{accountId}/symbols/{symbol}/current-price`
+- Real-time bid/ask prices with spread information
+- Automatic mid-price calculation for position sizing
+- Error handling with fallback to hardcoded rates
+
+**Historical Data**: `GET /users/current/accounts/{accountId}/historical-market-data/symbols/{symbol}/timeframes/{timeframe}/candles`
+- Fetches 100 recent candles for ATR calculations
+- Supports all major timeframes (1m to 1d)
+- Chronological sorting and data validation
+
+**Symbol Discovery**: `GET /users/current/accounts/{accountId}/symbols`
+- Dynamically loads all available trading symbols
+- Handles both string arrays and object responses
+- Automatic symbol formatting for display
+
+### Error Handling & Resilience
+- **CORS Detection**: Identifies browser security blocks and provides user guidance
+- **Graceful Degradation**: Falls back to hardcoded data when APIs fail
+- **Loading States**: Visual feedback during data fetching operations
+- **Comprehensive Logging**: Detailed activity logs for debugging
+
+## Dynamic Symbol Loading
+
+### Auto-Populate Currency Pairs
+The calculator automatically fetches and displays all available trading symbols from your connected MetaTrader account via MetaAPI, providing a personalized trading experience with access to your broker's complete symbol list.
+
+**How it works:**
+- **Automatic Loading**: When you connect to MetaAPI, the calculator fetches all available symbols from your MetaTrader account
+- **Real-time Updates**: Symbol list reflects your broker's current offerings
+- **Smart Formatting**: Automatically formats symbols for display (EUR/USD, XAU/USD (Gold), etc.)
+- **Fallback Protection**: Uses default symbol list if API connection fails
+
+**Technical Implementation:**
+- **REST API Endpoint**: `GET /users/current/accounts/{accountId}/symbols`
+- **Error Handling**: CORS detection and graceful fallback to default symbols
+- **Loading States**: Visual feedback during symbol fetching
+- **Selection Preservation**: Maintains your current selection when symbols update
+
+### Default Symbol List (Fallback)
+When MetaAPI is unavailable, the calculator uses these major pairs, crosses, and commodities:
 - EUR/USD, GBP/USD, USD/JPY, AUD/USD
 - USD/CAD, USD/CHF, NZD/USD
 - EUR/JPY, GBP/JPY, EUR/GBP, AUD/JPY
@@ -209,10 +253,13 @@ npm run build         # Copy SDK files to lib directory
 
 ### Project Structure
 ```
-├── index.html          # Main application file
-├── calculator.js       # MetaAPI integration and core logic
+├── index.html          # Main application file with Bootstrap UI
+├── calculator.js       # MetaAPI REST API integration and core logic
+├── config.js           # Configuration loader for environment variables
 ├── package.json        # Dependencies and scripts
-└── README.md          # This file
+├── CONVENTIONS.md      # Development standards and guidelines
+├── TODO.md            # Implementation status and completed tasks
+└── README.md          # This documentation file
 ```
 
 ## Security Notes
@@ -234,6 +281,12 @@ npm run build         # Copy SDK files to lib directory
 - If prices seem incorrect, try refreshing the connection
 - Use manual data entry as a backup when APIs fail
 - Check the activity logs for detailed error information
+
+### Symbol Loading Issues
+- **"Using default symbol list"**: MetaAPI not connected - symbols will auto-load after connection
+- **"CORS blocked - using default symbols"**: Browser security blocking requests - use manual data entry or deploy to web server
+- **"API error - using default symbols"**: MetaAPI connection issue - check credentials and account status
+- **Empty dropdown**: Refresh page or reconnect to MetaAPI
 
 ### Performance
 - The app automatically throttles API requests
