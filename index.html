@@ -2122,14 +2122,6 @@
                 logger.logCalculation('CORS_ERROR_HANDLED', { action: 'showed manual data section with CORS guidance' });
             }
 
-            // Update account currency symbol
-            $('#account-currency').change(function() {
-                const newCurrency = $(this).val();
-                const currencySymbol = getCurrencySymbol(newCurrency);
-                $('.account-currency-symbol').text(currencySymbol);
-                logger.logCalculation('ACCOUNT_CURRENCY_CHANGED', { newCurrency, currencySymbol });
-            });
-
             // Fetch forex rate when currency pair changes
             $('#currency-pair').change(function() {
                 const currencyPair = $(this).val();
