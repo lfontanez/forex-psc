@@ -2900,20 +2900,31 @@
                 // Calculate potential profit if take profit is set
                 let potentialProfit = 0;
                 let riskRewardRatio = '-';
+                let riskRewardDisplay = '-';
                 
                 if (!isNaN(takeProfitPips) && takeProfitPips > 0) {
                     potentialProfit = adjustedPositionSizeInLots * takeProfitPips * (pipValueInAccountCurrency * selectedLotRatio);
-                    riskRewardRatio = '1:' + (potentialProfit / actualRiskAmount).toFixed(2);
+                    const ratio = (potentialProfit / actualRiskAmount).toFixed(2);
+                    riskRewardRatio = '1:' + ratio;
+                    
+                    // Create enhanced display with actual amounts
+                    riskRewardDisplay = `
+                        <div class="fw-bold text-primary">${riskRewardRatio}</div>
+                        <div class="small text-muted mt-1">
+                            Risk ${accountCurrency} ${actualRiskAmount.toFixed(0)} : Reward ${accountCurrency} ${potentialProfit.toFixed(0)}
+                        </div>
+                    `;
                     
                     logger.logCalculation('POTENTIAL_PROFIT', 
                         { adjustedPositionSizeInLots, takeProfitPips, pipValueInAccountCurrency, selectedLotRatio },
-                        { potentialProfit, riskRewardRatio }
+                        { potentialProfit, riskRewardRatio, riskRewardDisplay }
                     );
                 }
                 
                 // Add to debug info
                 debugInfo.potentialProfit = potentialProfit;
                 debugInfo.riskRewardRatio = riskRewardRatio;
+                debugInfo.riskRewardDisplay = riskRewardDisplay;
                 debugInfo.timeframeFactors = timeframeFactors;
                 
                 // Display debug info
@@ -2931,12 +2942,12 @@
                 // Display take profit details if available
                 if (!isNaN(takeProfitPips) && takeProfitPips > 0) {
                     $('#take-profit-distance').text(`${takeProfitPips.toFixed(1)} pips`);
-                    $('#risk-reward-ratio-display').text(riskRewardRatio);
+                    $('#risk-reward-ratio-display').html(riskRewardDisplay);
                     $('#potential-profit').text(`${accountCurrency} ${potentialProfit.toFixed(2)}`);
                     $('#potential-profit').addClass('positive');
                 } else {
                     $('#take-profit-distance').text('Not set');
-                    $('#risk-reward-ratio-display').text('-');
+                    $('#risk-reward-ratio-display').html('-');
                     $('#potential-profit').text('Not calculated');
                     $('#potential-profit').removeClass('positive');
                 }
@@ -2949,6 +2960,7 @@
                     stopLossDistance: stopLossPips.toFixed(1),
                     takeProfitDistance: takeProfitPips ? takeProfitPips.toFixed(1) : 'Not set',
                     riskRewardRatio: riskRewardRatio,
+                    riskRewardDisplay: riskRewardDisplay,
                     potentialProfit: potentialProfit ? potentialProfit.toFixed(2) : 'Not calculated',
                     timeframe: globalTimeframe
                 });
