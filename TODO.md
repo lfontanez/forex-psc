@@ -50,6 +50,7 @@ The calculator now uses MetaAPI's REST API instead of WebSocket connections for 
 ### 🎯 Key Achievements
 
 - **Pure REST API**: No SDK dependencies, direct HTTP calls
+- **Dynamic Symbol Loading**: Auto-populates currency pairs from MetaTrader account
 - **Simplified Architecture**: Removed WebSocket complexity
 - **Better Performance**: Faster initialization, no SDK loading
 - **Improved Reliability**: Standard HTTP requests, easier debugging
@@ -61,12 +62,13 @@ The calculator now uses MetaAPI's REST API instead of WebSocket connections for 
 - [ ] Verify MetaAPI connection with real credentials
 - [ ] Test real-time price fetching and display
 - [ ] Test ATR calculations with live historical data
+- [x] **Auto-populate currency list from MetaAPI symbols endpoint** ✅
 - [ ] Validate manual data input functionality
 - [ ] Confirm fallback mechanisms work correctly
 - [ ] Test error handling and recovery paths
 - [ ] Verify UI status indicators update properly
 - [ ] Test on multiple currency pairs including JPY and Gold
-- [ ] Test SDK loading from CDN sources
+- [ ] Test dynamic symbol loading with different brokers
 - [ ] Validate production deployment
 
 ### 🚀 Production Deployment
@@ -119,6 +121,23 @@ The calculator now uses MetaAPI's REST API instead of WebSocket connections for 
 **Impact**: ATR now calculated from the most recently completed candle, matching MT4 values precisely.
 
 **Files Changed**: calculator.js (getATR method, lines 243-256)
+
+#### Auto-Populate Currency List Implementation (Completed)
+
+**Issue**: Calculator used hardcoded currency pair list, limiting users to predefined symbols.
+
+**Solution**: Implemented dynamic symbol loading from MetaAPI REST API endpoint.
+
+**Implementation Details**:
+- **Backend**: Added `getSymbols()` method to MetaAPIService class (calculator.js, lines 228-266)
+- **Frontend**: Added `fetchAndPopulateSymbols()` and `populateSymbolDropdown()` functions (index.html)
+- **API Endpoint**: `GET /users/current/accounts/{accountId}/symbols`
+- **Error Handling**: CORS detection, fallback to default symbols, loading states
+- **User Experience**: Automatic symbol loading on MetaAPI connection, formatted display
+
+**Impact**: Users now see all available symbols from their MetaTrader account instead of limited hardcoded list.
+
+**Files Changed**: calculator.js (getSymbols method), index.html (UI integration functions)
 
 ### 🎯 Current Status: REST API INTEGRATION
 
