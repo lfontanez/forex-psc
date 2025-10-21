@@ -12,6 +12,7 @@ A professional web-based calculator that helps traders determine optimal positio
 - **Risk Management Tools**: Calculates risk amounts based on account size and trade parameters
 - **Multiple Lot Sizes**: Supports standard (100,000), mini (10,000), and micro (1,000) lots
 - **Take Profit Options**: Supports fixed pips, risk-reward ratios, and ATR-based calculations
+- **Enhanced Risk-to-Reward Display**: Shows both standard ratio format (1:2.5) and detailed breakdown with actual risk and reward amounts in account currency for better understanding
 - **Professional UI**: Bootstrap-based responsive design with comprehensive logging
 
 ## Technical Requirements
