@@ -1433,6 +1433,9 @@
             // Global timeframe
             let globalTimeframe = '4h';
             
+            // Thousand separators preference
+            let useThousandSeparators = false;
+            
             // Timeframe conversion factors for ATR (relative to daily timeframe)
             const timeframeFactors = {
                 '1m': 0.05,   // 1 minute is roughly 5% of daily ATR
@@ -3050,6 +3053,26 @@
                 $('#result-container').fadeIn();
             }
 
+            // Utility function to format numbers with optional thousand separators
+            function formatNumberWithSeparators(number, decimals = 0, useThousandSeparators = true) {
+                // Format to specified decimal places
+                const formatted = number.toFixed(decimals);
+                
+                // Add thousand separators if requested
+                if (useThousandSeparators) {
+                    // Split into integer and decimal parts
+                    const parts = formatted.split('.');
+                    
+                    // Add commas to integer part
+                    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    
+                    // Rejoin parts
+                    return parts.join('.');
+                } else {
+                    return formatted;
+                }
+            }
+            
             // Currency symbol mapping function
             function getCurrencySymbol(currencyCode) {
                 const currencySymbols = {
