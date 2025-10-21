@@ -1008,6 +1008,17 @@
                                         <small class="text-muted">Default risk-to-reward ratio for take profit</small>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="settings-use-thousand-separators">
+                                            <label class="form-check-label" for="settings-use-thousand-separators">
+                                                Use Thousand Separators
+                                            </label>
+                                            <small class="form-text text-muted d-block">Add commas to separate thousands in numeric displays (e.g., 10,000 instead of 10000)</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1076,7 +1087,8 @@
                     
                     // UI Preferences
                     auto_initialize_metaapi: true,
-                    show_debug_info: true
+                    show_debug_info: true,
+                    use_thousand_separators: false
                 },
                 
                 // Load all settings from localStorage
@@ -1090,7 +1102,7 @@
                             // Parse numbers and booleans appropriately
                             if (key === 'account_size' || key === 'risk_percentage' || key === 'default_atr_periods' || key === 'default_sl_multiplier' || key === 'default_tp_ratio') {
                                 settings[key] = parseFloat(stored);
-                            } else if (key === 'auto_initialize_metaapi' || key === 'show_debug_info') {
+                            } else if (key === 'auto_initialize_metaapi' || key === 'show_debug_info' || key === 'use_thousand_separators') {
                                 settings[key] = stored === 'true';
                             } else {
                                 settings[key] = stored;
@@ -1156,6 +1168,9 @@
                     $('.account-currency-symbol').text(currencySymbol);
                     $('#settings-account-currency-symbol').text(currencySymbol);
                     
+                    // UI Preferences
+                    $('#settings-use-thousand-separators').prop('checked', settings.use_thousand_separators);
+                    
                     logger.logCalculation('SETTINGS_APPLIED_TO_UI', {}, settings);
                 },
                 
@@ -1181,7 +1196,8 @@
                         
                         // UI Preferences
                         auto_initialize_metaapi: true, // Always true for now
-                        show_debug_info: true // Always true for now
+                        show_debug_info: true, // Always true for now
+                        use_thousand_separators: false // Add commas to separate thousands in displays
                     };
                 },
                 
