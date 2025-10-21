@@ -7,19 +7,90 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <base url="/forex-psc/"/>
     <style>
+        /* CSS Variables for Theme Support */
+        :root {
+            /* Light Theme Variables */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #fafafa;
+            --bg-accent: #e9f7fe;
+            --bg-success: #e8f5e9;
+            --bg-warning: #fff3cd;
+            --bg-info: #e3f2fd;
+            --bg-danger: #fff5f5;
+            --bg-reward: #f0fff4;
+            
+            --text-primary: #333333;
+            --text-secondary: #2c3e50;
+            --text-muted: #6c757d;
+            --text-light: #ffffff;
+            --text-success: #2f855a;
+            --text-danger: #c53030;
+            
+            --border-primary: #eee;
+            --border-secondary: #dee2e6;
+            --border-light: #ccc;
+            --border-accent: #007bff;
+            
+            --shadow-primary: rgba(0, 0, 0, 0.1);
+            --shadow-secondary: rgba(0, 0, 0, 0.2);
+            
+            --accent-primary: #007bff;
+            --accent-success: #28a745;
+            --accent-warning: #ffc107;
+            --accent-danger: #dc3545;
+            --accent-info: #17a2b8;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Variables */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --bg-accent: #1e3a5f;
+            --bg-success: #1e4d2b;
+            --bg-warning: #4d3d1a;
+            --bg-info: #1a3a4d;
+            --bg-danger: #4d1a1a;
+            --bg-reward: #1a4d2b;
+            
+            --text-primary: #e0e0e0;
+            --text-secondary: #ffffff;
+            --text-muted: #a0a0a0;
+            --text-light: #ffffff;
+            --text-success: #4ade80;
+            --text-danger: #f87171;
+            
+            --border-primary: #404040;
+            --border-secondary: #555555;
+            --border-light: #666666;
+            --border-accent: #0ea5e9;
+            
+            --shadow-primary: rgba(0, 0, 0, 0.3);
+            --shadow-secondary: rgba(0, 0, 0, 0.5);
+            
+            --accent-primary: #0ea5e9;
+            --accent-success: #22c55e;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-info: #06b6d4;
+        }
+
         /* Styles remain unchanged */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .calculator-container {
             max-width: 800px;
             margin: 2rem auto;
-            background-color: #fff;
+            background-color: var(--bg-secondary);
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 20px var(--shadow-primary);
             padding: 2rem;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         .header {
             text-align: center;
