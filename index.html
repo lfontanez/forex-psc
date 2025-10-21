@@ -499,6 +499,7 @@
                 <!-- Hidden fields for account settings (managed in settings modal) -->
                 <input type="hidden" id="account-size" value="10000">
                 <input type="hidden" id="risk-percentage" value="2">
+                <input type="hidden" id="account-currency" value="USD">
                 
                 <div class="api-selector">
                     <label class="form-label">Rates Data Source:</label>
@@ -517,7 +518,7 @@
                 </div>
                 
                 <div class="row mb-3">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label for="currency-pair" class="form-label">Currency Pair:</label>
                         <select class="form-select" id="currency-pair" required="">
                             <option value="">Select Currency Pair</option>
@@ -537,19 +538,6 @@
                             <option value="XAUUSD">XAU/USD (Gold)</option>
                         </select>
                         <small class="text-muted" id="symbols-status">Using default symbol list</small>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="account-currency" class="form-label">Account Currency:</label>
-                        <select class="form-select" id="account-currency" required="">
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                            <option value="JPY">JPY</option>
-                            <option value="AUD">AUD</option>
-                            <option value="CAD">CAD</option>
-                            <option value="CHF">CHF</option>
-                            <option value="NZD">NZD</option>
-                        </select>
                     </div>
                 </div>
 
