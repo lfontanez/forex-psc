@@ -3237,6 +3237,34 @@
                 logger.logCalculation('TIMEFRAME_SYNCED_FROM_SETTINGS', { newTimeframe });
             });
             
+            // Thousand separators checkbox change handler
+            $('#settings-use-thousand-separators').on('change', function() {
+                const useThousands = $(this).is(':checked');
+                
+                // Update global variable immediately
+                useThousandSeparators = useThousands;
+                
+                // Update account size display in settings modal to show immediate feedback
+                const accountSize = parseFloat($('#settings-account-size').val()) || 10000;
+                const formattedAccountSize = formatNumberWithSeparators(accountSize, 0, useThousands);
+                
+                // Temporarily update the input value to show the formatting change
+                const $accountSizeInput = $('#settings-account-size');
+                const originalValue = $accountSizeInput.val();
+                $accountSizeInput.val(formattedAccountSize);
+                
+                // Restore the original numeric value after a brief moment to maintain functionality
+                setTimeout(function() {
+                    $accountSizeInput.val(originalValue);
+                }, 1500);
+                
+                logger.logCalculation('THOUSAND_SEPARATORS_TOGGLED', { 
+                    useThousands, 
+                    accountSize, 
+                    formattedAccountSize 
+                });
+            });
+            
             // Auto-populate MetaAPI credentials on page load
             async function autoPopulateCredentials() {
                 try {
@@ -3365,6 +3393,7 @@
                 // Update global variables
                 selectedLotSize = savedSettings.default_lot_size;
                 globalTimeframe = savedSettings.global_timeframe;
+                useThousandSeparators = savedSettings.use_thousand_separators;
                 
                 // Update timeframe display
                 const timeframeText = $(`.timeframe-option[data-timeframe="${savedSettings.global_timeframe}"]`).text();
