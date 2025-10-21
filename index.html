@@ -95,53 +95,62 @@
         .header {
             text-align: center;
             margin-bottom: 2rem;
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-primary);
             padding-bottom: 1rem;
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
         .form-label {
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
         }
         .result-box {
-            background-color: #f8f9fa;
+            background-color: var(--bg-tertiary);
             border-radius: 8px;
             padding: 1.5rem;
             margin-top: 2rem;
-            border-left: 5px solid #007bff;
+            border-left: 5px solid var(--border-accent);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .result-title {
-            color: #007bff;
+            color: var(--accent-primary);
             font-weight: 600;
             margin-bottom: 1rem;
+            transition: color 0.3s ease;
         }
         .result-value {
             font-size: 2rem;
             font-weight: 700;
-            color: #2c3e50;
+            color: var(--text-secondary);
             margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
         }
         .disclaimer {
             font-size: 0.8rem;
-            color: #6c757d;
+            color: var(--text-muted);
             margin-top: 2rem;
             padding-top: 1rem;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--border-primary);
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
         .rate-display {
-            background-color: #e9f7fe;
+            background-color: var(--bg-accent);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1.5rem;
+            transition: background-color 0.3s ease;
         }
         .rate-display .rate {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #0056b3;
+            color: var(--accent-primary);
+            transition: color 0.3s ease;
         }
         .rate-display .timestamp {
             font-size: 0.85rem;
-            color: #6c757d;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
         }
         .loading-spinner {
             width: 2rem;
@@ -161,8 +170,9 @@
             display: flex;
             margin-top: 1rem;
             padding: 0.5rem;
-            background-color: #f0f0f0;
+            background-color: var(--bg-tertiary);
             border-radius: 8px;
+            transition: background-color 0.3s ease;
         }
         .lot-option {
             flex: 1;
@@ -171,39 +181,43 @@
             cursor: pointer;
             border-radius: 4px;
             transition: all 0.3s;
+            color: var(--text-primary);
         }
         .lot-option.active {
-            background-color: #007bff;
-            color: white;
+            background-color: var(--accent-primary);
+            color: var(--text-light);
             font-weight: bold;
         }
         .profit-indicator {
             font-weight: 600;
         }
         .profit-indicator.positive {
-            color: #28a745;
+            color: var(--text-success);
         }
         .profit-indicator.negative {
-            color: #dc3545;
+            color: var(--text-danger);
         }
         .risk-reward-display {
-            background-color: #f8f9fa;
+            background-color: var(--bg-tertiary);
             border-radius: 8px;
             padding: 1rem;
-            border-left: 4px solid #007bff;
+            border-left: 4px solid var(--accent-primary);
             margin-top: 0.5rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .risk-reward-ratio {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #007bff;
+            color: var(--accent-primary);
             margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
         }
         .risk-reward-explanation {
             font-size: 0.85rem;
-            color: #6c757d;
+            color: var(--text-muted);
             margin-bottom: 0.75rem;
             font-style: italic;
+            transition: color 0.3s ease;
         }
         .risk-reward-breakdown {
             display: flex;
@@ -218,31 +232,36 @@
             border-radius: 6px;
         }
         .risk-amount {
-            background-color: #fff5f5;
-            border: 1px solid #fed7d7;
-            color: #c53030;
+            background-color: var(--bg-danger);
+            border: 1px solid var(--accent-danger);
+            color: var(--text-danger);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
         .reward-amount {
-            background-color: #f0fff4;
-            border: 1px solid #9ae6b4;
-            color: #2f855a;
+            background-color: var(--bg-reward);
+            border: 1px solid var(--accent-success);
+            color: var(--text-success);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
         .vs-separator {
             font-weight: bold;
-            color: #495057;
+            color: var(--text-primary);
             font-size: 1.1rem;
+            transition: color 0.3s ease;
         }
         .form-section {
-            border: 1px solid #eee;
+            border: 1px solid var(--border-primary);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1.5rem;
-            background-color: #fafafa;
+            background-color: var(--bg-tertiary);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .form-section-title {
             margin-bottom: 1rem;
-            color: #2c3e50;
+            color: var(--text-secondary);
             font-weight: 600;
+            transition: color 0.3s ease;
         }
         .risk-reward-toggle {
             margin-bottom: 1rem;
@@ -253,18 +272,20 @@
         }
         .nav-tabs {
             margin-bottom: 1rem;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--border-secondary);
+            transition: border-color 0.3s ease;
         }
         .nav-tabs .nav-link {
             border: none;
-            color: #6c757d;
+            color: var(--text-muted);
             padding: 0.5rem 1rem;
             border-bottom: 2px solid transparent;
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
         .nav-tabs .nav-link.active {
-            color: #007bff;
+            color: var(--accent-primary);
             background-color: transparent;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid var(--accent-primary);
             font-weight: 600;
         }
         .tab-content {
@@ -283,35 +304,39 @@
             cursor: pointer;
             padding: 0.5rem;
             border-radius: 4px;
-            border: 1px solid #dee2e6;
+            border: 1px solid var(--border-secondary);
             transition: all 0.3s;
             margin-right: 0.5rem;
             display: inline-block;
+            color: var(--text-primary);
+            background-color: var(--bg-secondary);
         }
         .api-option.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
+            background-color: var(--accent-primary);
+            color: var(--text-light);
+            border-color: var(--accent-primary);
         }
         .debug-info {
             font-size: 0.8rem;
             margin-top: 1rem;
             padding: 0.5rem;
-            border: 1px dashed #ddd;
-            background-color: #f9f9f9;
+            border: 1px dashed var(--border-light);
+            background-color: var(--bg-tertiary);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .debug-toggle-btn {
-            background-color: #343a40;
-            color: white;
+            background-color: var(--text-secondary);
+            color: var(--text-light);
             border: none;
             padding: 0.5rem 1rem;
             border-radius: 4px;
             margin-top: 1rem;
             cursor: pointer;
             font-size: 0.9rem;
+            transition: background-color 0.3s ease;
         }
         .debug-toggle-btn:hover {
-            background-color: #23272b;
+            background-color: var(--text-primary);
         }
         .debug-content {
             display: none;
@@ -319,17 +344,17 @@
         .refresh-rate-btn {
             border: none;
             background: none;
-            color: #007bff;
+            color: var(--accent-primary);
             cursor: pointer;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             transition: all 0.2s;
         }
         .refresh-rate-btn:hover {
-            background-color: rgba(0, 123, 255, 0.1);
+            background-color: var(--bg-accent);
         }
         .refresh-rate-btn:active {
-            background-color: rgba(0, 123, 255, 0.2);
+            background-color: var(--bg-info);
         }
         .refresh-container {
             display: flex;
@@ -338,31 +363,35 @@
             margin-bottom: 0.5rem;
         }
         .atr-display {
-            background-color: #f3f9ff;
+            background-color: var(--bg-info);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1.5rem;
-            border-left: 3px solid #17a2b8;
+            border-left: 3px solid var(--accent-info);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .atr-value {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #17a2b8;
+            color: var(--accent-info);
+            transition: color 0.3s ease;
         }
         .atr-multiplier {
             width: 70px;
         }
         .sl-based-on-atr {
             font-weight: 600;
-            color: #17a2b8;
+            color: var(--accent-info);
+            transition: color 0.3s ease;
         }
         .badge-info {
-            background-color: #17a2b8;
-            color: white;
+            background-color: var(--accent-info);
+            color: var(--text-light);
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
             margin-left: 0.5rem;
+            transition: background-color 0.3s ease;
         }
         .atr-badge {
             display: inline-block;
@@ -370,58 +399,63 @@
             padding: 0.15rem 0.5rem;
             border-radius: 12px;
             font-size: 0.75rem;
-            background-color: #e3f2fd;
-            color: #0d6efd;
-            border: 1px solid #0d6efd;
+            background-color: var(--bg-info);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         .log-container {
             max-height: 300px;
             overflow-y: auto;
             font-family: monospace;
             font-size: 0.8rem;
-            background-color: #2c3e50;
-            color: #f1f1f1;
+            background-color: var(--text-secondary);
+            color: var(--text-light);
             padding: 1rem;
             border-radius: 4px;
             margin-top: 1rem;
+            transition: background-color 0.3s ease;
         }
         .log-entry {
             margin-bottom: 0.5rem;
-            border-bottom: 1px solid #444;
+            border-bottom: 1px solid var(--border-light);
             padding-bottom: 0.5rem;
+            transition: border-color 0.3s ease;
         }
         .log-entry.api {
-            color: #7fdbff;
+            color: var(--accent-info);
         }
         .log-entry.calculation {
-            color: #2ecc71;
+            color: var(--accent-success);
         }
         .log-entry.error {
-            color: #ff6b6b;
+            color: var(--accent-danger);
         }
         .log-timestamp {
-            color: #aaa;
+            color: var(--text-muted);
             margin-right: 0.5rem;
         }
         .toggle-logs-btn {
-            background-color: #343a40;
-            color: white;
+            background-color: var(--text-secondary);
+            color: var(--text-light);
             border: none;
             padding: 0.5rem 1rem;
             border-radius: 4px;
             margin-top: 1rem;
             cursor: pointer;
             font-size: 0.9rem;
+            transition: background-color 0.3s ease;
         }
         .toggle-logs-btn:hover {
-            background-color: #23272b;
+            background-color: var(--text-primary);
         }
         .global-timeframe-section {
-            background-color: #ebf7ed;
+            background-color: var(--bg-success);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1.5rem;
-            border-left: 3px solid #28a745;
+            border-left: 3px solid var(--accent-success);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .timeframe-selector {
             display: flex;
@@ -433,20 +467,22 @@
             cursor: pointer;
             padding: 0.5rem 0.75rem;
             border-radius: 4px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-light);
             transition: all 0.2s;
             font-size: 0.9rem;
             text-align: center;
             flex: 1;
             min-width: 60px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
         }
         .timeframe-option:hover {
-            background-color: #f0f0f0;
+            background-color: var(--bg-tertiary);
         }
         .timeframe-option.active {
-            background-color: #28a745;
-            color: white;
-            border-color: #28a745;
+            background-color: var(--accent-success);
+            color: var(--text-light);
+            border-color: var(--accent-success);
             font-weight: 600;
         }
         .timeframe-badge {
@@ -454,16 +490,18 @@
             padding: 0.2rem 0.5rem;
             border-radius: 12px;
             font-size: 0.75rem;
-            background-color: #e8f5e9;
-            color: #28a745;
-            border: 1px solid #28a745;
+            background-color: var(--bg-success);
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
             margin-left: 0.5rem;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         .scaling-info {
             font-size: 0.85rem;
-            color: #555;
+            color: var(--text-muted);
             margin-top: 0.5rem;
             font-style: italic;
+            transition: color 0.3s ease;
         }
         .header-icons {
             display: flex;
@@ -476,11 +514,11 @@
             cursor: pointer;
             padding: 0.5rem;
             border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.8);
-            border: 1px solid #dee2e6;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-secondary);
             transition: all 0.2s;
             font-size: 1.1rem;
-            color: #6c757d;
+            color: var(--text-muted);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -488,28 +526,28 @@
             height: 40px;
         }
         .header-icon:hover {
-            background-color: #f8f9fa;
-            color: #495057;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px var(--shadow-primary);
         }
         .metaapi-status-icon {
             position: relative;
         }
         .metaapi-status-icon.connected {
-            color: #28a745;
-            background-color: rgba(40, 167, 69, 0.1);
-            border-color: #28a745;
+            color: var(--accent-success);
+            background-color: var(--bg-success);
+            border-color: var(--accent-success);
         }
         .metaapi-status-icon.disconnected {
-            color: #dc3545;
-            background-color: rgba(220, 53, 69, 0.1);
-            border-color: #dc3545;
+            color: var(--accent-danger);
+            background-color: var(--bg-danger);
+            border-color: var(--accent-danger);
         }
         .metaapi-status-icon.connecting {
-            color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.1);
-            border-color: #ffc107;
+            color: var(--accent-warning);
+            background-color: var(--bg-warning);
+            border-color: var(--accent-warning);
         }
         .header {
             position: relative;
