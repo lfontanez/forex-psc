@@ -1,7 +1,7 @@
 {
   "name": "forex-position-calculator",
   "version": "3.0.0",
-  "description": "Professional Forex Position Size Calculator with MetaAPI REST API Integration",
+  "description": "Professional Forex Position Size Calculator with MetaAPI REST API Integration and Auto-Populate Currency Lists",
   "main": "index.html",
   "scripts": {
     "start": "npx http-server . -p 3080",
@@ -28,6 +28,9 @@
     "atr",
     "trading-calculator",
     "financial-tools",
+    "auto-populate",
+    "currency-pairs",
+    "symbol-management",
     "no-dependencies"
   ],
   "author": "Forex Calculator Team",
