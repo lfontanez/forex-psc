@@ -1164,8 +1164,9 @@
                     $('#settings-global-timeframe').val(settings.global_timeframe);
                     
                     // Update account currency symbols
-                    $('.account-currency-symbol').text(settings.account_currency);
-                    $('#settings-account-currency-symbol').text(settings.account_currency);
+                    const currencySymbol = getCurrencySymbol(settings.account_currency);
+                    $('.account-currency-symbol').text(currencySymbol);
+                    $('#settings-account-currency-symbol').text(currencySymbol);
                     
                     logger.logCalculation('SETTINGS_APPLIED_TO_UI', {}, settings);
                 },
@@ -2136,8 +2137,9 @@
             // Update account currency symbol
             $('#account-currency').change(function() {
                 const newCurrency = $(this).val();
-                $('.account-currency-symbol').text(newCurrency);
-                logger.logCalculation('ACCOUNT_CURRENCY_CHANGED', { newCurrency });
+                const currencySymbol = getCurrencySymbol(newCurrency);
+                $('.account-currency-symbol').text(currencySymbol);
+                logger.logCalculation('ACCOUNT_CURRENCY_CHANGED', { newCurrency, currencySymbol });
             });
 
             // Fetch forex rate when currency pair changes
@@ -2987,12 +2989,12 @@
                             <div class="risk-reward-breakdown">
                                 <div class="risk-amount">
                                     <div class="fw-bold">Risk</div>
-                                    <div>${accountCurrency} ${actualRiskAmount.toFixed(0)}</div>
+                                    <div>${formatCurrencyAmount(actualRiskAmount, accountCurrency, 0)}</div>
                                 </div>
                                 <div class="vs-separator">vs</div>
                                 <div class="reward-amount">
                                     <div class="fw-bold">Reward</div>
-                                    <div>${accountCurrency} ${potentialProfit.toFixed(0)}</div>
+                                    <div>${formatCurrencyAmount(potentialProfit, accountCurrency, 0)}</div>
                                 </div>
                             </div>
                         </div>
@@ -3018,15 +3020,15 @@
                 // Display results
                 $('#position-size-lots').text(adjustedPositionSizeInLots.toFixed(2));
                 $('#position-size-units').text(Math.round(positionSizeUnits).toLocaleString());
-                $('#risk-amount').text(`${accountCurrency} ${actualRiskAmount.toFixed(2)}`);
-                $('#pip-value').text(`${accountCurrency} ${(pipValueInAccountCurrency * selectedLotRatio * adjustedPositionSizeInLots).toFixed(2)}`);
+                $('#risk-amount').text(formatCurrencyAmount(actualRiskAmount, accountCurrency));
+                $('#pip-value').text(formatCurrencyAmount(pipValueInAccountCurrency * selectedLotRatio * adjustedPositionSizeInLots, accountCurrency));
                 $('#stop-loss-distance').text(`${stopLossPips.toFixed(1)} pips`);
                 
                 // Display take profit details if available
                 if (!isNaN(takeProfitPips) && takeProfitPips > 0) {
                     $('#take-profit-distance').text(`${takeProfitPips.toFixed(1)} pips`);
                     $('#risk-reward-ratio-display').html(riskRewardDisplay);
-                    $('#potential-profit').text(`${accountCurrency} ${potentialProfit.toFixed(2)}`);
+                    $('#potential-profit').text(formatCurrencyAmount(potentialProfit, accountCurrency));
                     $('#potential-profit').addClass('positive');
                 } else {
                     $('#take-profit-distance').text('Not set');
@@ -3050,6 +3052,38 @@
                 
                 // Show results container
                 $('#result-container').fadeIn();
+            }
+
+            // Currency symbol mapping function
+            function getCurrencySymbol(currencyCode) {
+                const currencySymbols = {
+                    'USD': '$',
+                    'EUR': '€',
+                    'GBP': '£',
+                    'JPY': '¥',
+                    'AUD': 'A$',
+                    'CAD': 'C$',
+                    'CHF': 'CHF ',
+                    'NZD': 'NZ$'
+                };
+                
+                const symbol = currencySymbols[currencyCode];
+                logger.logCalculation('GET_CURRENCY_SYMBOL', { currencyCode }, { symbol });
+                return symbol || currencyCode + ' '; // Fallback to currency code with space
+            }
+            
+            // Format currency amount with proper symbol
+            function formatCurrencyAmount(amount, currencyCode, decimals = 2) {
+                const symbol = getCurrencySymbol(currencyCode);
+                const formattedAmount = amount.toFixed(decimals);
+                
+                // For currencies that use symbol prefix (most currencies)
+                if (['$', '€', '£', '¥', 'A$', 'C$', 'NZ$'].includes(symbol)) {
+                    return symbol + formattedAmount;
+                } else {
+                    // For currencies that use symbol suffix or code (like CHF)
+                    return symbol + formattedAmount;
+                }
             }
 
             // Get current rate (or fallback)
@@ -3126,13 +3160,14 @@
             // Account Currency Change Handler (Settings Modal)
             $('#settings-account-currency').change(function() {
                 const newCurrency = $(this).val();
-                $('#settings-account-currency-symbol').text(newCurrency);
+                const currencySymbol = getCurrencySymbol(newCurrency);
+                $('#settings-account-currency-symbol').text(currencySymbol);
                 
                 // Also update main form
                 $('#account-currency').val(newCurrency);
-                $('.account-currency-symbol').text(newCurrency);
+                $('.account-currency-symbol').text(currencySymbol);
                 
-                logger.logCalculation('ACCOUNT_CURRENCY_CHANGED_IN_SETTINGS', { newCurrency });
+                logger.logCalculation('ACCOUNT_CURRENCY_CHANGED_IN_SETTINGS', { newCurrency, currencySymbol });
             });
             
             // Sync settings between modal and main form
@@ -3311,6 +3346,11 @@
                 // Update timeframe display
                 const timeframeText = $(`.timeframe-option[data-timeframe="${savedSettings.global_timeframe}"]`).text();
                 $('#atr-timeframe-display').text(timeframeText + ' timeframe');
+                
+                // Initialize currency symbols
+                const currencySymbol = getCurrencySymbol(savedSettings.account_currency);
+                $('.account-currency-symbol').text(currencySymbol);
+                $('#settings-account-currency-symbol').text(currencySymbol);
                 
                 // Initialize MetaAPI status as disconnected
                 metaAPIStatusManager.setDisconnected('Not connected');
