@@ -183,6 +183,22 @@
             border: 1px dashed #ddd;
             background-color: #f9f9f9;
         }
+        .debug-toggle-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .debug-toggle-btn:hover {
+            background-color: #5a6268;
+        }
+        .debug-content {
+            display: none;
+        }
         .refresh-rate-btn {
             border: none;
             background: none;
@@ -746,8 +762,13 @@
             </div>
             
             <div class="debug-info" id="debug-info">
-                <h5>Debug Information</h5>
-                <div id="debug-content"></div>
+                <button type="button" class="debug-toggle-btn" id="debug-toggle-btn">
+                    <i class="bi bi-chevron-down"></i> Show Debug Information
+                </button>
+                <div class="debug-content" id="debug-content-wrapper">
+                    <h5>Debug Information</h5>
+                    <div id="debug-content"></div>
+                </div>
             </div>
             
             <button type="button" class="toggle-logs-btn" id="toggle-logs-btn">Show Activity Logs</button>
@@ -1296,6 +1317,23 @@
                 } else {
                     $logContainer.show();
                     $(this).text('Hide Activity Logs');
+                }
+            });
+            
+            // Toggle debug info button
+            $('#debug-toggle-btn').click(function() {
+                const $debugContent = $('#debug-content-wrapper');
+                const $icon = $(this).find('i');
+                const isVisible = $debugContent.is(':visible');
+                
+                if (isVisible) {
+                    $debugContent.hide();
+                    $icon.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+                    $(this).html('<i class="bi bi-chevron-down"></i> Show Debug Information');
+                } else {
+                    $debugContent.show();
+                    $icon.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+                    $(this).html('<i class="bi bi-chevron-up"></i> Hide Debug Information');
                 }
             });
             
@@ -2865,7 +2903,7 @@
                 
                 if (!isNaN(takeProfitPips) && takeProfitPips > 0) {
                     potentialProfit = adjustedPositionSizeInLots * takeProfitPips * (pipValueInAccountCurrency * selectedLotRatio);
-                    riskRewardRatio = (potentialProfit / actualRiskAmount).toFixed(2) + ':1';
+                    riskRewardRatio = '1:' + (potentialProfit / actualRiskAmount).toFixed(2);
                     
                     logger.logCalculation('POTENTIAL_PROFIT', 
                         { adjustedPositionSizeInLots, takeProfitPips, pipValueInAccountCurrency, selectedLotRatio },
